@@ -45,8 +45,8 @@ if (footer) {
 
 const floatingCoverLayer = document.querySelector("[data-floating-covers]");
 if (floatingCoverLayer && window.JMT_TRACKS) {
-  floatingCoverLayer.innerHTML = window.JMT_TRACKS.slice(0, 6).map(track => `
-    <div class="floating-cover" data-depth="${0.25 + track.art * 0.08}">
+  floatingCoverLayer.innerHTML = window.JMT_TRACKS.slice(0, 5).map((track, index) => `
+    <div class="floating-cover" data-depth="${0.28 + index * 0.07}">
       ${artworkMarkup(track, false)}
     </div>`).join("");
 
@@ -80,7 +80,7 @@ function artworkMarkup(track, lazy = true) {
 }
 
 function releaseTags(track) {
-  return [track.mood, track.genre, track.bpm && `${track.bpm} BPM`, track.key]
+  return (track.tags || [])
     .filter(Boolean)
     .map(value => `<span class="tag">${value}</span>`)
     .join("");
@@ -93,10 +93,12 @@ function releaseCard(track) {
       <div class="card-body">
         <p class="release-genre">${track.genre || "Instrumental"}</p>
         <h3 class="card-title">${track.title}</h3>
+        <p class="release-bpm">${track.genre} <span>•</span> ${track.bpm} BPM</p>
+        <p class="release-description">${track.description || ""}</p>
         <div class="track-tags">${releaseTags(track)}</div>
         <div class="track-actions">
-          <button class="icon-button play-button" type="button" aria-label="Play preview of ${track.title}" title="Play preview">▶</button>
-          <a class="text-link" href="${track.beatstarsUrl || "#"}" aria-label="License ${track.title} on BeatStars">License</a>
+          <button class="button button-small play-button" type="button" data-default-label="▶ Listen">▶ Listen</button>
+          <a class="button button-small" href="${track.beatstarsUrl || "#"}" aria-label="View ${track.title} on BeatStars">BeatStars</a>
         </div>
       </div>
     </article>`;
@@ -138,6 +140,22 @@ if (newestRelease && window.JMT_TRACKS) {
     </article>`;
 }
 
+const heroRelease = document.querySelector("[data-hero-release]");
+const heroCover = document.querySelector("[data-hero-cover]");
+if (heroRelease && heroCover && window.JMT_TRACKS) {
+  const track = window.JMT_TRACKS.find(item => item.newest) || window.JMT_TRACKS[0];
+  heroCover.innerHTML = artworkMarkup(track, false);
+  heroRelease.innerHTML = `
+    <p class="hero-release-label">Newest release</p>
+    <h2>${track.title}</h2>
+    <p class="hero-release-meta">${track.genre} <span>•</span> ${track.bpm} BPM</p>
+    <p class="hero-release-description">${track.description || ""}</p>
+    <div class="actions">
+      <button class="button button-primary play-button" type="button" data-default-label="▶ Listen">▶ Listen</button>
+      <a class="button" href="${track.beatstarsUrl || "#"}">License</a>
+    </div>`;
+}
+
 const categoryRails = document.querySelector("[data-category-rails]");
 if (categoryRails && window.JMT_CATEGORIES) {
   categoryRails.innerHTML = window.JMT_CATEGORIES.map((category, index) => {
@@ -159,7 +177,7 @@ if (catalogSections && window.JMT_CATEGORIES) {
     <section class="catalog-section" data-catalog-category="${category.id}">
       <h2 class="catalog-title">${category.name}</h2>
       <p class="catalog-description">${category.description}</p>
-      <div class="track-grid">${window.JMT_TRACKS.filter(track => track.category === category.id).map(trackCard).join("")}</div>
+      <div class="release-grid catalog-release-grid">${window.JMT_TRACKS.filter(track => track.category === category.id).map(releaseCard).join("")}</div>
     </section>`).join("");
 }
 
@@ -188,7 +206,7 @@ document.querySelectorAll("[data-filter]").forEach(button => {
     document.querySelectorAll("[data-filter]").forEach(item => item.classList.remove("active"));
     button.classList.add("active");
     const value = button.dataset.filter;
-    document.querySelectorAll(".track-card").forEach(card => {
+    document.querySelectorAll(".track-card, .release-card").forEach(card => {
       card.style.display = value === "all" || card.dataset.category === value ? "" : "none";
     });
     document.querySelectorAll("[data-catalog-category]").forEach(section => {
