@@ -77,8 +77,54 @@ button, a { -webkit-tap-highlight-color: transparent; }
   content: ""; position: absolute; inset: 0;
   background: linear-gradient(90deg, rgba(5,7,8,.97) 0%, rgba(5,7,8,.75) 43%, rgba(5,7,8,.15) 76%),
               linear-gradient(0deg, #07090a 0%, transparent 34%);
+  z-index: 1;
 }
-.hero-content { position: relative; z-index: 1; width: 760px; padding: 170px 0 11vh; }
+.hero-content { position: relative; z-index: 3; width: 760px; padding: 170px 0 11vh; }
+.floating-covers {
+  position: absolute;
+  inset: 76px 0 0;
+  z-index: 2;
+  overflow: hidden;
+  pointer-events: none;
+  perspective: 1000px;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 28%, #000 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 28%, #000 100%);
+}
+.floating-cover {
+  --size: 150px;
+  --rotation: 0deg;
+  --shift-x: 0px;
+  --shift-y: 0px;
+  position: absolute;
+  width: var(--size);
+  aspect-ratio: 1;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 7px;
+  opacity: .28;
+  overflow: hidden;
+  box-shadow: 0 28px 65px rgba(0,0,0,.55), 0 4px 18px rgba(0,0,0,.4);
+  transform: translate3d(var(--shift-x), var(--shift-y), 0) rotate(var(--rotation));
+  will-change: transform;
+  animation: cover-float var(--duration, 22s) ease-in-out var(--delay, 0s) infinite alternate;
+}
+.floating-cover .artwork {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1;
+  padding: 15px;
+}
+.floating-cover .art-label { font-size: clamp(15px, 1.8vw, 24px); }
+.floating-cover:nth-child(1) { --size: 168px; --rotation: -8deg; --duration: 24s; --delay: -7s; left: 54%; top: 8%; }
+.floating-cover:nth-child(2) { --size: 118px; --rotation: 7deg; --duration: 29s; --delay: -18s; left: 79%; top: 4%; opacity: .2; }
+.floating-cover:nth-child(3) { --size: 192px; --rotation: 5deg; --duration: 27s; --delay: -12s; left: 68%; top: 49%; opacity: .32; }
+.floating-cover:nth-child(4) { --size: 126px; --rotation: -5deg; --duration: 32s; --delay: -23s; left: 88%; top: 57%; opacity: .19; }
+.floating-cover:nth-child(5) { --size: 105px; --rotation: 9deg; --duration: 25s; --delay: -4s; left: 47%; top: 68%; opacity: .17; }
+.floating-cover:nth-child(6) { --size: 138px; --rotation: -3deg; --duration: 30s; --delay: -15s; left: 84%; top: 28%; opacity: .23; }
+@keyframes cover-float {
+  0% { transform: translate3d(var(--shift-x), var(--shift-y), 0) rotate(var(--rotation)); }
+  45% { transform: translate3d(calc(var(--shift-x) + 18px), calc(var(--shift-y) - 22px), 25px) rotate(calc(var(--rotation) + 2deg)); }
+  100% { transform: translate3d(calc(var(--shift-x) - 14px), calc(var(--shift-y) + 16px), 0) rotate(calc(var(--rotation) - 1.5deg)); }
+}
 .eyebrow { margin: 0 0 17px; color: var(--amber); font-size: 11px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; }
 h1, h2, h3, p { margin-top: 0; }
 h1, h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; }
@@ -228,6 +274,16 @@ h1 { max-width: 700px; margin-bottom: 22px; font-size: clamp(58px, 9vw, 126px); 
   .nav-cta { margin-top: 12px; text-align: center; }
   .hero { min-height: 92svh; background-position: 58% center; }
   .hero::after { background: linear-gradient(90deg, rgba(5,7,8,.95), rgba(5,7,8,.42)), linear-gradient(0deg, #07090a, transparent 45%); }
+  .floating-covers {
+    inset: 68px 0 0;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 48%);
+    mask-image: linear-gradient(90deg, transparent, #000 48%);
+  }
+  .floating-cover { opacity: .16; }
+  .floating-cover:nth-child(n+4) { display: none; }
+  .floating-cover:nth-child(1) { --size: 120px; left: 61%; top: 13%; }
+  .floating-cover:nth-child(2) { --size: 88px; left: 78%; top: 42%; }
+  .floating-cover:nth-child(3) { --size: 108px; left: 66%; top: 70%; opacity: .13; }
   .hero-content { padding: 145px 0 70px; }
   .section { padding: 75px 0; }
   .section-head { align-items: start; flex-direction: column; }
@@ -253,4 +309,7 @@ h1 { max-width: 700px; margin-bottom: 22px; font-size: clamp(58px, 9vw, 126px); 
   .use-grid { grid-template-columns: 1fr; }
   .stat-row { grid-template-columns: 1fr; }
   .footer-bottom { flex-direction: column; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .floating-cover { animation: none; }
 }

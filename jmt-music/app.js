@@ -43,6 +43,35 @@ if (footer) {
     </div>`;
 }
 
+const floatingCoverLayer = document.querySelector("[data-floating-covers]");
+if (floatingCoverLayer && window.JMT_TRACKS) {
+  floatingCoverLayer.innerHTML = window.JMT_TRACKS.slice(0, 6).map(track => `
+    <div class="floating-cover" data-depth="${0.25 + track.art * 0.08}">
+      <div class="artwork artwork-${track.art}"><span class="art-label">${track.title}</span></div>
+    </div>`).join("");
+
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    let pointerX = 0;
+    let pointerY = 0;
+    let frame;
+    const covers = [...floatingCoverLayer.querySelectorAll(".floating-cover")];
+    const updateParallax = () => {
+      covers.forEach(cover => {
+        const depth = Number(cover.dataset.depth);
+        cover.style.setProperty("--shift-x", `${pointerX * depth}px`);
+        cover.style.setProperty("--shift-y", `${pointerY * depth}px`);
+      });
+      frame = null;
+    };
+    document.querySelector(".hero").addEventListener("pointermove", event => {
+      const rect = event.currentTarget.getBoundingClientRect();
+      pointerX = ((event.clientX - rect.left) / rect.width - .5) * 22;
+      pointerY = ((event.clientY - rect.top) / rect.height - .5) * 16;
+      if (!frame) frame = requestAnimationFrame(updateParallax);
+    }, { passive: true });
+  }
+}
+
 function trackCard(track) {
   return `
     <article class="track-card" data-category="${track.category}">
