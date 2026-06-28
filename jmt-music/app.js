@@ -44,6 +44,10 @@ if (footer) {
     </div>`;
 }
 
+function initializeCatalog(catalog) {
+window.JMT_TRACKS = [...catalog.tracks].sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate));
+window.JMT_CATEGORIES = catalog.genres;
+
 const floatingCoverLayer = document.querySelector("[data-floating-covers]");
 if (floatingCoverLayer && window.JMT_TRACKS) {
   floatingCoverLayer.innerHTML = window.JMT_TRACKS.slice(0, 5).map((track, index) => `
@@ -74,8 +78,8 @@ if (floatingCoverLayer && window.JMT_TRACKS) {
 }
 
 function artworkMarkup(track, lazy = true) {
-  const image = track.artworkUrl
-    ? `<img src="${basePath}${track.artworkUrl}" alt="${track.title} artwork" ${lazy ? 'loading="lazy"' : ""} decoding="async">`
+  const image = track.coverImage
+    ? `<img src="${basePath}${track.coverImage}" alt="${track.title} artwork" ${lazy ? 'loading="lazy"' : ""} decoding="async">`
     : "";
   return `<div class="artwork artwork-${track.art || 1}">${image}<span class="art-label">${track.title}</span></div>`;
 }
@@ -89,14 +93,15 @@ function releaseTags(track) {
 
 function releaseCard(track) {
   const beatstarsLink = track.beatstarsUrl && track.beatstarsUrl !== "#" ? track.beatstarsUrl : "#";
+  const genreName = window.JMT_CATEGORIES.find(category => category.id === track.genre)?.name || track.genre;
   return `
-    <article class="release-card catalog-release-card" data-category="${track.category}">
+    <article class="release-card catalog-release-card" data-category="${track.genre}">
       ${artworkMarkup(track)}
       <div class="card-body">
-        <p class="release-genre">${track.genre || "Instrumental"}</p>
+        <p class="release-genre">${genreName || "Instrumental"}</p>
         <h3 class="card-title">${track.title}</h3>
-        <p class="release-bpm">${track.genre} <span>•</span> ${track.bpm} BPM</p>
-        <p class="release-description">${track.description || ""}</p>
+        <p class="release-bpm">${track.bpm} BPM${track.key ? ` <span>•</span> ${track.key}` : ""}</p>
+        <p class="release-description">${track.shortDescription || ""}</p>
         <div class="track-tags">${releaseTags(track)}</div>
         <div class="track-actions">
           <a class="button button-small button-primary" href="${beatstarsLink}" aria-label="Listen to and license ${track.title} on BeatStars">Listen / License</a>
@@ -107,13 +112,14 @@ function releaseCard(track) {
 
 function recentReleaseCard(track) {
   const beatstarsLink = track.beatstarsUrl && track.beatstarsUrl !== "#" ? track.beatstarsUrl : "#";
+  const genreName = window.JMT_CATEGORIES.find(category => category.id === track.genre)?.name || track.genre;
   return `
     <article class="release-card recent-release-card">
       ${artworkMarkup(track)}
       <div class="card-body">
-        <p class="release-genre">${track.genre || "Instrumental"}</p>
+        <p class="release-genre">${genreName || "Instrumental"}</p>
         <h3 class="card-title">${track.title}</h3>
-        <p class="card-meta">${track.shortVibe || track.description || ""}</p>
+        <p class="card-meta">${track.shortDescription || ""}</p>
         <a class="button button-small button-primary" href="${beatstarsLink}" aria-label="Listen to and license ${track.title} on BeatStars">Listen / License</a>
       </div>
     </article>`;
@@ -121,7 +127,7 @@ function recentReleaseCard(track) {
 
 function trackCard(track) {
   return `
-    <article class="track-card" data-category="${track.category}">
+    <article class="track-card" data-category="${track.genre}">
       ${artworkMarkup(track)}
       <div class="track-info">
         <div>
@@ -138,14 +144,14 @@ function trackCard(track) {
 
 const newestRelease = document.querySelector("[data-newest-release]");
 if (newestRelease && window.JMT_TRACKS) {
-  const track = window.JMT_TRACKS.find(item => item.newest) || window.JMT_TRACKS[0];
+  const track = window.JMT_TRACKS.find(item => item.featured) || window.JMT_TRACKS[0];
   newestRelease.innerHTML = `
     <article class="featured-release">
       <div class="featured-art">${artworkMarkup(track, false)}</div>
       <div class="featured-copy">
-        <p class="eyebrow">${track.genre || "New instrumental"}</p>
+        <p class="eyebrow">${window.JMT_CATEGORIES.find(category => category.id === track.genre)?.name || track.genre || "New instrumental"}</p>
         <h3>${track.title}</h3>
-        ${track.description ? `<p class="featured-description">${track.description}</p>` : ""}
+        ${track.shortDescription ? `<p class="featured-description">${track.shortDescription}</p>` : ""}
         <div class="featured-meta">${releaseTags(track)}</div>
         <div class="actions">
           <a class="button button-primary" href="${track.beatstarsUrl || "#"}">Buy License</a>
@@ -158,13 +164,13 @@ if (newestRelease && window.JMT_TRACKS) {
 const heroRelease = document.querySelector("[data-hero-release]");
 const heroCover = document.querySelector("[data-hero-cover]");
 if (heroRelease && heroCover && window.JMT_TRACKS) {
-  const track = window.JMT_TRACKS.find(item => item.newest) || window.JMT_TRACKS[0];
+  const track = window.JMT_TRACKS.find(item => item.featured) || window.JMT_TRACKS[0];
   heroCover.innerHTML = artworkMarkup(track, false);
   heroRelease.innerHTML = `
     <p class="hero-release-label">Newest release</p>
     <h2>${track.title}</h2>
-    <p class="hero-release-meta">${track.genre} <span>•</span> ${track.bpm} BPM</p>
-    <p class="hero-release-description">${track.description || ""}</p>
+    <p class="hero-release-meta">${window.JMT_CATEGORIES.find(category => category.id === track.genre)?.name || track.genre} <span>•</span> ${track.bpm} BPM</p>
+    <p class="hero-release-description">${track.shortDescription || ""}</p>
     <div class="actions">
       <button class="button button-primary play-button" type="button" data-default-label="▶ Listen">▶ Listen</button>
       <a class="button" href="${track.beatstarsUrl || "#"}">License</a>
@@ -174,7 +180,7 @@ if (heroRelease && heroCover && window.JMT_TRACKS) {
 const categoryRails = document.querySelector("[data-category-rails]");
 if (categoryRails && window.JMT_CATEGORIES) {
   categoryRails.innerHTML = window.JMT_CATEGORIES.map((category, index) => {
-    const tracks = window.JMT_TRACKS.filter(track => track.category === category.id).slice(0, 4);
+    const tracks = window.JMT_TRACKS.filter(track => track.genre === category.id).slice(0, 4);
     return `
       <section class="catalog-rail">
         <div class="rail-heading">
@@ -188,13 +194,13 @@ if (categoryRails && window.JMT_CATEGORIES) {
 
 const recentReleases = document.querySelector("[data-recent-releases]");
 if (recentReleases && window.JMT_TRACKS) {
-  recentReleases.innerHTML = window.JMT_TRACKS.slice(0, 5).map(recentReleaseCard).join("");
+  recentReleases.innerHTML = window.JMT_TRACKS.filter(track => track.featured).slice(0, 6).map(recentReleaseCard).join("");
 }
 
 const genreCards = document.querySelector("[data-genre-cards]");
 if (genreCards && window.JMT_CATEGORIES) {
   genreCards.innerHTML = window.JMT_CATEGORIES.map(category => {
-    const featuredTrack = window.JMT_TRACKS.find(track => track.category === category.id);
+    const featuredTrack = window.JMT_TRACKS.find(track => track.genre === category.id);
     return `
       <article class="genre-card">
         <div class="genre-card-art">${featuredTrack ? artworkMarkup(featuredTrack) : ""}</div>
@@ -212,7 +218,7 @@ const genrePageGrid = document.querySelector("[data-genre-page-grid]");
 if (genrePageGrid && window.JMT_TRACKS) {
   const category = document.body.dataset.category;
   genrePageGrid.innerHTML = window.JMT_TRACKS
-    .filter(track => track.category === category)
+    .filter(track => track.genre === category)
     .map(releaseCard)
     .join("");
 }
@@ -223,13 +229,13 @@ if (catalogSections && window.JMT_CATEGORIES) {
     <section class="catalog-section" data-catalog-category="${category.id}">
       <h2 class="catalog-title">${category.name}</h2>
       <p class="catalog-description">${category.description}</p>
-      <div class="release-grid catalog-release-grid">${window.JMT_TRACKS.filter(track => track.category === category.id).map(releaseCard).join("")}</div>
+      <div class="release-grid catalog-release-grid">${window.JMT_TRACKS.filter(track => track.genre === category.id).map(releaseCard).join("")}</div>
     </section>`).join("");
 }
 
 document.querySelectorAll("[data-track-grid]").forEach(grid => {
   const category = grid.dataset.trackGrid;
-  const tracks = category === "all" ? window.JMT_TRACKS : window.JMT_TRACKS.filter(track => track.category === category);
+  const tracks = category === "all" ? window.JMT_TRACKS : window.JMT_TRACKS.filter(track => track.genre === category);
   grid.innerHTML = tracks.map(trackCard).join("");
 });
 
@@ -266,6 +272,10 @@ if (requestedFilter) {
   const filterButton = document.querySelector(`[data-filter="${requestedFilter}"]`);
   if (filterButton) filterButton.click();
 }
+}
+
+addEventListener("jmt:catalog-ready", event => initializeCatalog(event.detail), { once: true });
+if (window.JMT_CATALOG) initializeCatalog(window.JMT_CATALOG);
 
 const form = document.querySelector("[data-contact-form]");
 if (form) {

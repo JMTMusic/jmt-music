@@ -1,0 +1,89 @@
+{
+  "tracks": [
+    {
+      "title": "Heat Check",
+      "slug": "heat-check",
+      "genre": "classic",
+      "bpm": 141,
+      "key": null,
+      "coverImage": "assets/covers/heat-check.jpg",
+      "shortDescription": "Dark, cinematic trap built for high-energy moments.",
+      "beatstarsUrl": "#",
+      "releaseDate": "2026-06-27",
+      "featured": true,
+      "tags": ["Dark", "Anthem", "Cinematic Trap"]
+    },
+    {
+      "title": "Hoodie",
+      "slug": "hoodie",
+      "genre": "chill",
+      "bpm": 98,
+      "key": null,
+      "coverImage": "assets/covers/hoodie.jpg",
+      "shortDescription": "Smooth hip hop with an easy, reflective pocket.",
+      "beatstarsUrl": "#",
+      "releaseDate": "2026-06-27",
+      "featured": true,
+      "tags": ["J Cole", "Chill", "Hip Hop"]
+    },
+    {
+      "title": "Why Not",
+      "slug": "why-not",
+      "genre": "classic",
+      "bpm": 96,
+      "key": null,
+      "coverImage": "assets/covers/why-not.jpg",
+      "shortDescription": "Spacious melodic trap with heavyweight low end.",
+      "beatstarsUrl": "#",
+      "releaseDate": "2026-06-27",
+      "featured": true,
+      "tags": ["Travis Scott", "Future", "Metro Boomin"]
+    },
+    {
+      "title": "TLKIN",
+      "slug": "tlkin",
+      "genre": "chill",
+      "bpm": 84,
+      "key": null,
+      "coverImage": "assets/covers/tlkin.jpg",
+      "shortDescription": "Laid-back hip hop for after-hours writing sessions.",
+      "beatstarsUrl": "#",
+      "releaseDate": "2026-06-27",
+      "featured": true,
+      "tags": ["Drake", "Mac Miller", "Late Night"]
+    },
+    {
+      "title": "Backpack",
+      "slug": "backpack",
+      "genre": "lofi",
+      "bpm": 122,
+      "key": null,
+      "coverImage": "assets/covers/backpack.jpg",
+      "shortDescription": "Warm, dusty hip hop for city drives and quiet focus.",
+      "beatstarsUrl": "#",
+      "releaseDate": "2026-06-27",
+      "featured": true,
+      "tags": ["Summer Vibes", "Late Night", "Hip Hop"]
+    }
+  ],
+  "genres": [
+    {
+      "id": "chill",
+      "name": "Chill Beats",
+      "description": "Smooth, atmospheric production for writing sessions, quiet focus, and after-hours listening.",
+      "path": "beats/chill/"
+    },
+    {
+      "id": "lofi",
+      "name": "Lofi Hip Hop Beats",
+      "description": "Warm textures, easy pockets, and lived-in grooves for low-key ideas and late-night loops.",
+      "path": "beats/lofi/"
+    },
+    {
+      "id": "classic",
+      "name": "Classic Hip Hop / Trap Beats",
+      "description": "Hard drums, cinematic tension, and modern low end rooted in timeless hip hop energy.",
+      "path": "beats/classic-hip-hop-trap/"
+    }
+  ]
+}

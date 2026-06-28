@@ -12,6 +12,16 @@ Open `http://localhost:8080`.
 
 ## Update tracks
 
-Edit `tracks.js`. Every catalog and discovery card is generated from `window.JMT_TRACKS`.
+Edit `tracks.json`. The homepage, genre pages, catalog, and discovery views all load from this single file.
 
-Replace placeholder links (`href="#"`) with the live BeatStars and Instagram URLs when available.
+Each track supports:
+
+- `title`, `slug`, `genre`
+- `bpm`, `key`
+- `coverImage`, `shortDescription`
+- `beatstarsUrl`, `releaseDate`, `featured`
+- `tags`
+
+Homepage releases are the newest tracks with `featured: true`. Genre pages filter automatically using the track's `genre` value.
+
+Replace the placeholder `beatstarsUrl` values with live track URLs when available.
