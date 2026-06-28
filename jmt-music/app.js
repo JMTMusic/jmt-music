@@ -91,8 +91,26 @@ function releaseTags(track) {
     .join("");
 }
 
+function validBeatStarsUrl(value) {
+  if (!value || typeof value !== "string" || value.trim() === "" || value.trim() === "#") return null;
+  try {
+    const url = new URL(value);
+    const isBeatStars = url.hostname === "beatstars.com" || url.hostname.endsWith(".beatstars.com");
+    return url.protocol === "https:" && isBeatStars ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
+function beatstarsButton(track, className = "button button-small button-primary") {
+  const url = validBeatStarsUrl(track.beatstarsUrl);
+  if (!url) {
+    return `<span class="${className} is-disabled" aria-disabled="true">Coming Soon</span>`;
+  }
+  return `<a class="${className}" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="Listen to and license ${track.title} on BeatStars">Listen / License</a>`;
+}
+
 function releaseCard(track) {
-  const beatstarsLink = track.beatstarsUrl && track.beatstarsUrl !== "#" ? track.beatstarsUrl : "#";
   const genreName = window.JMT_CATEGORIES.find(category => category.id === track.genre)?.name || track.genre;
   return `
     <article class="release-card catalog-release-card" data-category="${track.genre}">
@@ -104,14 +122,13 @@ function releaseCard(track) {
         <p class="release-description">${track.shortDescription || ""}</p>
         <div class="track-tags">${releaseTags(track)}</div>
         <div class="track-actions">
-          <a class="button button-small button-primary" href="${beatstarsLink}" aria-label="Listen to and license ${track.title} on BeatStars">Listen / License</a>
+          ${beatstarsButton(track)}
         </div>
       </div>
     </article>`;
 }
 
 function recentReleaseCard(track) {
-  const beatstarsLink = track.beatstarsUrl && track.beatstarsUrl !== "#" ? track.beatstarsUrl : "#";
   const genreName = window.JMT_CATEGORIES.find(category => category.id === track.genre)?.name || track.genre;
   return `
     <article class="release-card recent-release-card">
@@ -120,7 +137,7 @@ function recentReleaseCard(track) {
         <p class="release-genre">${genreName || "Instrumental"}</p>
         <h3 class="card-title">${track.title}</h3>
         <p class="card-meta">${track.shortDescription || ""}</p>
-        <a class="button button-small button-primary" href="${beatstarsLink}" aria-label="Listen to and license ${track.title} on BeatStars">Listen / License</a>
+        ${beatstarsButton(track)}
       </div>
     </article>`;
 }
@@ -136,7 +153,7 @@ function trackCard(track) {
         </div>
         <div class="track-actions">
           <button class="button button-small play-button" type="button">▶ Play preview</button>
-          <a class="button button-small" href="${track.beatstarsUrl || "#"}" aria-label="License ${track.title} on BeatStars">License</a>
+          ${beatstarsButton(track, "button button-small")}
         </div>
       </div>
     </article>`;
@@ -154,7 +171,7 @@ if (newestRelease && window.JMT_TRACKS) {
         ${track.shortDescription ? `<p class="featured-description">${track.shortDescription}</p>` : ""}
         <div class="featured-meta">${releaseTags(track)}</div>
         <div class="actions">
-          <a class="button button-primary" href="${track.beatstarsUrl || "#"}">Buy License</a>
+          ${beatstarsButton(track, "button button-primary")}
           <button class="button play-button" type="button" data-default-label="▶ Listen">▶ Listen</button>
         </div>
       </div>
@@ -173,7 +190,7 @@ if (heroRelease && heroCover && window.JMT_TRACKS) {
     <p class="hero-release-description">${track.shortDescription || ""}</p>
     <div class="actions">
       <button class="button button-primary play-button" type="button" data-default-label="▶ Listen">▶ Listen</button>
-      <a class="button" href="${track.beatstarsUrl || "#"}">License</a>
+      ${beatstarsButton(track, "button")}
     </div>`;
 }
 
