@@ -36,7 +36,7 @@ if (footer) {
         <p class="footer-title">Original sound for artists, stories, and screens.</p>
         <div class="footer-links">
           <a href="#" aria-label="Instagram placeholder">Instagram</a>
-          <a href="#" aria-label="BeatStars placeholder">BeatStars</a>
+          <span>BeatStars coming soon</span>
           <a href="mailto:hello@jmtmusic.studio">hello@jmtmusic.studio</a>
         </div>
       </div>
@@ -96,7 +96,8 @@ function validBeatStarsUrl(value) {
   try {
     const url = new URL(value);
     const isBeatStars = url.hostname === "beatstars.com" || url.hostname.endsWith(".beatstars.com");
-    return url.protocol === "https:" && isBeatStars ? url.href : null;
+    const isTrackPage = /^\/beat\/[^/]+/i.test(url.pathname);
+    return url.protocol === "https:" && isBeatStars && isTrackPage ? url.href : null;
   } catch {
     return null;
   }
@@ -105,9 +106,23 @@ function validBeatStarsUrl(value) {
 function beatstarsButton(track, className = "button button-small button-primary") {
   const url = validBeatStarsUrl(track.beatstarsUrl);
   if (!url) {
-    return `<span class="${className} is-disabled" aria-disabled="true">Coming Soon</span>`;
+    return `<span class="${className} is-disabled" aria-disabled="true">BeatStars Coming Soon</span>`;
   }
-  return `<a class="${className}" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="Listen to and license ${track.title} on BeatStars">Listen / License</a>`;
+  return `<a class="${className}" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="View ${track.title} on BeatStars">View on BeatStars</a>`;
+}
+
+function validAudioUrl(value) {
+  if (!value || typeof value !== "string") return null;
+  const path = value.trim();
+  return /^\/audio\/[^/]+\.(mp3|m4a|aac|ogg|wav)$/i.test(path) ? path : null;
+}
+
+function audioButton(track, className = "button button-small") {
+  const url = validAudioUrl(track.audioUrl);
+  if (!url) {
+    return `<span class="${className} is-disabled" aria-disabled="true">Audio Coming Soon</span>`;
+  }
+  return `<button class="${className} play-button" type="button" data-audio-url="${url}" data-default-label="▶ Play Preview" aria-label="Play ${track.title} preview">▶ Play Preview</button>`;
 }
 
 function releaseCard(track) {
@@ -122,6 +137,7 @@ function releaseCard(track) {
         <p class="release-description">${track.shortDescription || ""}</p>
         <div class="track-tags">${releaseTags(track)}</div>
         <div class="track-actions">
+          ${audioButton(track)}
           ${beatstarsButton(track)}
         </div>
       </div>
@@ -137,7 +153,10 @@ function recentReleaseCard(track) {
         <p class="release-genre">${genreName || "Instrumental"}</p>
         <h3 class="card-title">${track.title}</h3>
         <p class="card-meta">${track.shortDescription || ""}</p>
-        ${beatstarsButton(track)}
+        <div class="track-actions">
+          ${audioButton(track)}
+          ${beatstarsButton(track)}
+        </div>
       </div>
     </article>`;
 }
@@ -152,7 +171,7 @@ function trackCard(track) {
           <div class="track-tags">${releaseTags(track)}</div>
         </div>
         <div class="track-actions">
-          <button class="button button-small play-button" type="button">▶ Play preview</button>
+          ${audioButton(track)}
           ${beatstarsButton(track, "button button-small")}
         </div>
       </div>
@@ -172,7 +191,7 @@ if (newestRelease && window.JMT_TRACKS) {
         <div class="featured-meta">${releaseTags(track)}</div>
         <div class="actions">
           ${beatstarsButton(track, "button button-primary")}
-          <button class="button play-button" type="button" data-default-label="▶ Listen">▶ Listen</button>
+          ${audioButton(track, "button")}
         </div>
       </div>
     </article>`;
@@ -189,7 +208,7 @@ if (heroRelease && heroCover && window.JMT_TRACKS) {
     <p class="hero-release-meta">${window.JMT_CATEGORIES.find(category => category.id === track.genre)?.name || track.genre} <span>•</span> ${track.bpm} BPM</p>
     <p class="hero-release-description">${track.shortDescription || ""}</p>
     <div class="actions">
-      <button class="button button-primary play-button" type="button" data-default-label="▶ Listen">▶ Listen</button>
+      ${audioButton(track, "button button-primary")}
       ${beatstarsButton(track, "button")}
     </div>`;
 }
@@ -256,17 +275,60 @@ document.querySelectorAll("[data-track-grid]").forEach(grid => {
   grid.innerHTML = tracks.map(trackCard).join("");
 });
 
+let audioPlayer = document.querySelector("[data-audio-player]");
+if (!audioPlayer) {
+  audioPlayer = document.createElement("audio");
+  audioPlayer.dataset.audioPlayer = "";
+  audioPlayer.preload = "none";
+  audioPlayer.hidden = true;
+  document.body.append(audioPlayer);
+}
+
+let activeAudioButton = null;
+const resetAudioButtons = () => {
+  document.querySelectorAll(".play-button").forEach(item => {
+    item.classList.remove("playing");
+    item.textContent = item.dataset.defaultLabel || "▶ Play Preview";
+  });
+};
+
+audioPlayer.addEventListener("ended", () => {
+  resetAudioButtons();
+  activeAudioButton = null;
+});
+
+audioPlayer.addEventListener("error", () => {
+  if (activeAudioButton) {
+    activeAudioButton.classList.remove("playing");
+    activeAudioButton.classList.add("is-disabled");
+    activeAudioButton.disabled = true;
+    activeAudioButton.textContent = "Audio Coming Soon";
+  }
+  activeAudioButton = null;
+});
+
 document.querySelectorAll(".play-button").forEach(button => {
   button.addEventListener("click", () => {
-    const wasPlaying = button.classList.contains("playing");
-    document.querySelectorAll(".play-button").forEach(item => {
-      item.classList.remove("playing");
-      item.textContent = item.classList.contains("icon-button") ? "▶" : item.dataset.defaultLabel || "▶ Play preview";
-    });
-    if (!wasPlaying) {
-      button.classList.add("playing");
-      button.textContent = button.classList.contains("icon-button") ? "■" : "■ Stop preview";
+    if (activeAudioButton === button && !audioPlayer.paused) {
+      audioPlayer.pause();
+      resetAudioButtons();
+      activeAudioButton = null;
+      return;
     }
+
+    audioPlayer.pause();
+    resetAudioButtons();
+    activeAudioButton = button;
+    audioPlayer.src = button.dataset.audioUrl;
+    button.classList.add("playing");
+    button.textContent = "■ Stop Preview";
+    audioPlayer.play().catch(() => {
+      button.classList.remove("playing");
+      button.classList.add("is-disabled");
+      button.disabled = true;
+      button.textContent = "Audio Coming Soon";
+      activeAudioButton = null;
+    });
   });
 });
 
