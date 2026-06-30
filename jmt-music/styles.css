@@ -366,7 +366,11 @@ h1 { max-width: 820px; margin-bottom: 24px; font-size: clamp(54px, 7.2vw, 104px)
 .track-tags { display: flex; gap: 7px; flex-wrap: wrap; margin: 8px 0 12px; }
 .tag { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .06em; }
 .track-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+.play-button { white-space: nowrap; }
 .play-button.playing { background: var(--teal); border-color: var(--teal); color: var(--ink); }
+.play-button.paused { border-color: var(--teal); color: var(--paper); }
+.play-icon { width: 1em; text-align: center; }
+.play-time { color: currentColor; font-variant-numeric: tabular-nums; opacity: .72; }
 .catalog-section + .catalog-section { margin-top: 80px; }
 .catalog-section { content-visibility: auto; contain-intrinsic-size: 620px; }
 .catalog-title { margin-bottom: 8px; font-size: 34px; }

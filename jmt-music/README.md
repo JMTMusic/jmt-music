@@ -24,18 +24,10 @@ Each track supports:
 
 Homepage releases are the newest tracks with `featured: true`. Genre pages filter automatically using the track's `genre` value.
 
-Replace the placeholder `beatstarsUrl` values with live track URLs when available.
+Set `beatstarsUrl` to a live BeatStars track URL when available. A null value renders a disabled "Coming Soon" state.
 
 ## Audio previews
 
 This is a static site, so public assets live directly under the site root. Add preview files to `audio/` and then set each track's `audioUrl` to its root-relative path.
 
-Files still needed:
-
-- `audio/heat-check.mp3`
-- `audio/hoodie.mp3`
-- `audio/why-not.mp3`
-- `audio/tlkin.mp3`
-- `audio/backpack.mp3`
-
-Until a file is added and its `audioUrl` is set (for example, `"/audio/heat-check.mp3"`), the site displays **Audio Coming Soon** and does not attempt playback.
+All catalog previews live in `audio/`, and each track references its file with a root-relative path such as `"/audio/heat-check.mp3"`. If a file or `audioUrl` is unavailable, the site displays a disabled fallback without interrupting the rest of the catalog.
