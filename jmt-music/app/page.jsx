@@ -14,7 +14,7 @@ import { TrackCard } from "@/components/track-ui";
 import { tracks } from "@/lib/tracks";
 
 const services = [
-  [Music2, "Music Production", "Complete, artist-centered production from the first idea through a polished arrangement."],
+  [Music2, "Music Production", "Intentional, artist-centered production from the first idea through a polished arrangement."],
   [AudioLines, "Custom Instrumentals", "Original music built around your voice, creative direction, and intended audience."],
   [SlidersHorizontal, "Mixing & Mastering", "Clarity, depth, impact, and release-ready translation across every playback system."],
   [KeyboardMusic, "Piano / Keyboard Sessions", "Expressive piano, Rhodes, organ, and synth performances that add real musical movement."],
@@ -42,8 +42,8 @@ export default function Home() {
         <div className="site-width hero-inner">
           <Reveal className="hero-copy production-hero-copy">
             <p className="eyebrow">JMT Music · Production Studio</p>
-            <h1>Production for artists, creators, and brands who need finished music.</h1>
-            <p>Original beats, custom instrumentals, sync-ready music, and piano-driven production from JMT Music.</p>
+            <h1>Crafted with purpose.</h1>
+            <p>A production studio built on exceptional craftsmanship, genuine care, and the belief that every song deserves to become something unforgettable.</p>
             <div className="button-row">
               <Link className="button button-primary" href="/contact">Start a Project <ArrowRight /></Link>
               <Link className="button button-secondary" href="/beats">Browse Instrumentals</Link>
@@ -79,7 +79,7 @@ export default function Home() {
         <div className="site-width">
           <Reveal className="section-heading">
             <div><p className="eyebrow">Featured work · Recent releases</p><h2>The work speaks first.</h2></div>
-            <p>Recent JMT Music releases, selected as proof of range, musicality, and production finish.</p>
+            <p>Recent JMT Music releases, selected as proof of range, musicality, and care in every detail.</p>
           </Reveal>
           <div className="featured-work-grid">
             {tracks.slice(0, 3).map((track) => <Reveal key={track.slug}><TrackCard track={track} portfolio /></Reveal>)}
@@ -92,9 +92,9 @@ export default function Home() {
         <div className="why-glow" />
         <div className="site-width why-layout">
           <Reveal className="why-intro">
-            <p className="eyebrow">Why JMT Music</p>
-            <h2>Musical instinct with a professional finish.</h2>
-            <p>Every project is shaped by the song, the story, and the feeling it needs to leave behind.</p>
+            <p className="eyebrow">The JMT Music philosophy</p>
+            <h2>Craftsmanship behind every note.</h2>
+            <p>JMT Music exists to create music with exceptional craftsmanship and genuine care. We believe every artist, every project, and every song deserves the time, attention, and dedication it takes to become something unforgettable.</p>
           </Reveal>
           <div className="why-list">
             {strengths.map(([title, description], index) => (

@@ -44,7 +44,7 @@ export function SiteShell({ children }) {
       <footer className="site-footer">
         <div className="site-width">
           <div className="footer-lead">
-            <p>Let&apos;s make the record sound finished.</p>
+            <p>Let&apos;s make something unforgettable.</p>
             <Link className="button button-primary" href="/contact">Start a Project</Link>
           </div>
           <div className="footer-grid">
