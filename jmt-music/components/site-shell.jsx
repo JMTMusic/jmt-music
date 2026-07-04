@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { AudioProvider } from "./audio-provider";
 import { GlobalPlayer } from "./track-ui";
+import { externalLinks } from "@/lib/site-links";
 
 const navigation = [
   ["Home", "/"],
@@ -50,7 +51,12 @@ export function SiteShell({ children }) {
           <div className="footer-grid">
             <div><span className="brand-mark">JMT</span><p>Production, mixing, mastering, and original music by Jonathan Tripp.</p></div>
             <div><h2>Navigate</h2>{navigation.map(([label, href]) => <Link key={href} href={href}>{label}</Link>)}</div>
-            <div><h2>Connect</h2><a href="#" aria-label="Instagram">Instagram</a><a href="#" aria-label="BeatStars">BeatStars</a><a href="#" aria-label="Fiverr">Fiverr</a></div>
+            <div>
+              <h2>Connect</h2>
+              <a href={externalLinks.instagram} target="_blank" rel="noopener noreferrer" aria-label="JMT Music on Instagram">Instagram</a>
+              <a href={externalLinks.beatstars} target="_blank" rel="noopener noreferrer" aria-label="JMT Music on BeatStars">BeatStars</a>
+              <a href={externalLinks.fiverr} target="_blank" rel="noopener noreferrer" aria-label="JMT Music on Fiverr">Fiverr</a>
+            </div>
           </div>
           <div className="footer-bottom"><span>© {new Date().getFullYear()} JMT Music</span><span>JMTMusic.studio</span></div>
         </div>

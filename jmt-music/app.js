@@ -1,5 +1,7 @@
 const page = document.body.dataset.page;
 const basePath = document.body.dataset.base || "";
+const instagramUrl = "https://www.instagram.com/jmtmusic05/";
+const beatstarsUrl = "https://www.beatstars.com/JMTMusic";
 const navItems = [
   ["Home", "index.html", "home"],
   ["Discover", "discover.html", "discover"],
@@ -35,8 +37,8 @@ if (footer) {
       <div class="footer-top">
         <p class="footer-title">Original sound for artists, stories, and screens.</p>
         <div class="footer-links">
-          <a href="#" aria-label="Instagram placeholder">Instagram</a>
-          <span>BeatStars coming soon</span>
+          <a href="${instagramUrl}" target="_blank" rel="noopener noreferrer" aria-label="JMT Music on Instagram">Instagram</a>
+          <a href="${beatstarsUrl}" target="_blank" rel="noopener noreferrer" aria-label="JMT Music on BeatStars">BeatStars</a>
           <a href="mailto:hello@jmtmusic.studio">hello@jmtmusic.studio</a>
         </div>
       </div>
@@ -106,7 +108,7 @@ function validBeatStarsUrl(value) {
 function beatstarsButton(track, className = "button button-small button-primary") {
   const url = validBeatStarsUrl(track.beatstarsUrl);
   if (!url) {
-    return `<span class="${className} is-disabled" aria-disabled="true">BeatStars Coming Soon</span>`;
+    return `<a class="${className}" href="${beatstarsUrl}" target="_blank" rel="noopener noreferrer" aria-label="Browse JMT Music on BeatStars">View on BeatStars</a>`;
   }
   return `<a class="${className}" href="${url}" target="_blank" rel="noopener noreferrer" aria-label="View ${track.title} on BeatStars">View on BeatStars</a>`;
 }

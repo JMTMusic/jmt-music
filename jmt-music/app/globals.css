@@ -51,12 +51,12 @@ h1, h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; lette
 .hero-backdrop { position: absolute; inset: 0; background: url("/assets/jmt-studio-hero.png") 58% center/cover no-repeat; animation: hero-push 18s ease-in-out infinite alternate; }
 .hero-backdrop::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, #05070a 0%, rgba(5,7,10,.94) 38%, rgba(5,7,10,.33) 70%, rgba(5,7,10,.55)), linear-gradient(0deg, #05070a 0%, transparent 32%); }
 .hero-light { position: absolute; width: 46%; height: 65%; right: 3%; top: 7%; background: radial-gradient(ellipse, rgba(96,165,250,.18), transparent 67%); filter: blur(24px); animation: light-breathe 8s ease-in-out infinite alternate; }
-.hero-inner { position: relative; z-index: 2; padding-top: 110px; }
+.hero-inner { min-height: 94svh; position: relative; z-index: 2; display: flex; flex-direction: column; justify-content: center; padding: 120px 0 92px; }
 .hero-copy { width: min(760px, 68%); }
 .hero h1 { margin-bottom: 26px; font-size: clamp(60px, 8.2vw, 118px); line-height: .86; }
 .hero h1 em { color: var(--blue-bright); font-weight: 400; }
 .hero-copy > p:not(.eyebrow) { max-width: 670px; margin-bottom: 34px; color: #b5bec9; font-size: clamp(17px, 1.6vw, 21px); }
-.hero-proof { position: absolute; left: 0; bottom: -15vh; display: flex; gap: 24px; color: #808997; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .16em; }
+.hero-proof { position: static; display: flex; flex-wrap: wrap; gap: 24px; margin-top: clamp(42px, 8vh, 76px); color: #808997; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .16em; }
 .hero-proof span + span::before { content: ""; display: inline-block; width: 3px; height: 3px; margin: 0 24px 2px 0; border-radius: 50%; background: var(--blue); }
 .production-hero { min-height: 94svh; }
 .production-hero-copy { width: min(900px, 76%); }
@@ -187,13 +187,24 @@ h1, h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; lette
 .contact-links { display: grid; gap: 12px; margin-top: 42px; }
 .contact-links a { display: flex; align-items: center; gap: 12px; color: #c1c8d1; font-size: 13px; }
 .contact-links svg { width: 18px; color: var(--blue); }
-.inquiry-form { padding: 38px; border: 1px solid var(--line); border-radius: 7px; background: rgba(13,18,25,.82); }
+.inquiry-form { padding: 38px; border: 1px solid var(--line); border-radius: 7px; background: rgba(13,18,25,.82); box-shadow: 0 30px 80px rgba(0,0,0,.24); }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.inquiry-form label { display: grid; gap: 8px; margin-bottom: 18px; color: #cbd2db; font-size: 11px; font-weight: 700; }
-.inquiry-form input, .inquiry-form select, .inquiry-form textarea { width: 100%; border: 1px solid var(--line); border-radius: 5px; outline: none; background: #070a0f; color: white; padding: 14px; transition: border-color .2s; }
-.inquiry-form input:focus, .inquiry-form select:focus, .inquiry-form textarea:focus { border-color: var(--blue); }
+.inquiry-form label { display: grid; gap: 9px; margin-bottom: 20px; color: #cbd2db; font-size: 11px; font-weight: 700; }
+.inquiry-form input, .inquiry-form select, .inquiry-form textarea { width: 100%; min-height: 50px; border: 1px solid rgba(255,255,255,.12); border-radius: 5px; outline: none; background: #070a0f; color: white; padding: 14px; transition: border-color .2s, background .2s, box-shadow .2s; }
+.inquiry-form input:hover, .inquiry-form select:hover, .inquiry-form textarea:hover { border-color: rgba(147,197,253,.42); background: #090d13; }
+.inquiry-form input:focus, .inquiry-form select:focus, .inquiry-form textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(96,165,250,.12), 0 0 24px rgba(96,165,250,.08); }
+.select-wrap { position: relative; display: block; }
+.select-wrap::after { content: ""; position: absolute; width: 7px; height: 7px; right: 17px; top: 19px; border-right: 1px solid var(--blue-bright); border-bottom: 1px solid var(--blue-bright); transform: rotate(45deg); pointer-events: none; }
+.inquiry-form select { appearance: none; cursor: pointer; padding-right: 42px; }
+.inquiry-form select option { background: #0b1017; color: white; }
 .inquiry-form textarea { resize: vertical; }
-.form-success { margin-bottom: 22px; padding: 14px; border: 1px solid rgba(96,165,250,.4); background: rgba(96,165,250,.09); color: var(--blue-bright); font-size: 13px; }
+.form-status:empty { display: none; }
+.form-success, .form-error { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 22px; padding: 14px; border: 1px solid rgba(96,165,250,.4); border-radius: 5px; background: rgba(96,165,250,.09); color: var(--blue-bright); font-size: 13px; }
+.form-error { border-color: rgba(248,113,113,.42); background: rgba(248,113,113,.08); color: #fca5a5; }
+.form-success svg, .form-error svg { width: 18px; flex: 0 0 auto; }
+.form-submit:disabled { cursor: wait; opacity: .72; transform: none; }
+.spin { animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 .form-note { margin: 13px 0 0; color: #68717e; font-size: 10px; }
 
 .project-hero { padding: 135px 0 100px; min-height: 100svh; background: linear-gradient(135deg, #0a1018, #05070a 55%); }
@@ -237,6 +248,9 @@ h1, h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; lette
 .player-control svg { width: 16px; }
 .global-player input[type="range"] { min-width: 80px; flex: 1; accent-color: var(--blue); }
 .player-time { width: 32px; color: #7d8691; font-size: 9px; }
+.player-volume { width: 105px; display: flex; align-items: center; gap: 7px; padding-left: 12px; border-left: 1px solid var(--line); }
+.player-volume svg { width: 16px; flex: 0 0 auto; color: #89929e; }
+.player-volume input[type="range"] { width: 70px; min-width: 0; }
 .player-license { min-width: 48px; height: 36px; display: grid; place-items: center; border-left: 1px solid var(--line); color: var(--blue); font-size: 9px; font-weight: 800; text-transform: uppercase; }
 .player-license svg { width: 16px; }
 
@@ -326,6 +340,8 @@ h1, h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; lette
   .global-player > img { width: 44px; height: 44px; }
   .player-title { width: 92px; }
   .player-title span, .player-time { display: none; }
+  .player-volume { width: auto; padding-left: 0; border-left: 0; }
+  .player-volume input { display: none; }
   .player-license { min-width: 42px; }
 }
 

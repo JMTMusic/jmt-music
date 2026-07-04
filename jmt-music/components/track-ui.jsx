@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Pause, Play, ShoppingBag } from "lucide-react";
+import { Pause, Play, ShoppingBag, Volume2, VolumeX } from "lucide-react";
 import { useAudio } from "./audio-provider";
 
 function formatTime(value) {
@@ -45,7 +45,7 @@ export function TrackCard({ track, portfolio = false }) {
 }
 
 export function GlobalPlayer() {
-  const { activeTrack, playing, currentTime, duration, toggle, seek } = useAudio();
+  const { activeTrack, playing, currentTime, duration, volume, toggle, seek, setVolume } = useAudio();
   if (!activeTrack) return null;
   return (
     <aside className="global-player" aria-label="Audio player">
@@ -57,7 +57,16 @@ export function GlobalPlayer() {
       <span className="player-time">{formatTime(currentTime)}</span>
       <input type="range" min="0" max={duration || 0} value={currentTime} onChange={(event) => seek(Number(event.target.value))} aria-label="Track position" />
       <span className="player-time">{formatTime(duration)}</span>
-      <a className="player-license" href={activeTrack.beatstarsUrl || "/contact"} aria-label="License or inquire">
+      <div className="player-volume">
+        {volume === 0 ? <VolumeX aria-hidden="true" /> : <Volume2 aria-hidden="true" />}
+        <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(event) => setVolume(Number(event.target.value))} aria-label="Volume" />
+      </div>
+      <a
+        className="player-license"
+        href={activeTrack.beatstarsUrl || "/contact"}
+        aria-label="License or inquire"
+        {...(activeTrack.beatstarsUrl ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      >
         {activeTrack.beatstarsUrl ? <ShoppingBag /> : <span>Inquire</span>}
       </a>
     </aside>
