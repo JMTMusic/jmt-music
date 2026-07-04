@@ -193,10 +193,16 @@ h1, h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; lette
 .inquiry-form input, .inquiry-form select, .inquiry-form textarea { width: 100%; min-height: 50px; border: 1px solid rgba(255,255,255,.12); border-radius: 5px; outline: none; background: #070a0f; color: white; padding: 14px; transition: border-color .2s, background .2s, box-shadow .2s; }
 .inquiry-form input:hover, .inquiry-form select:hover, .inquiry-form textarea:hover { border-color: rgba(147,197,253,.42); background: #090d13; }
 .inquiry-form input:focus, .inquiry-form select:focus, .inquiry-form textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(96,165,250,.12), 0 0 24px rgba(96,165,250,.08); }
-.select-wrap { position: relative; display: block; }
-.select-wrap::after { content: ""; position: absolute; width: 7px; height: 7px; right: 17px; top: 19px; border-right: 1px solid var(--blue-bright); border-bottom: 1px solid var(--blue-bright); transform: rotate(45deg); pointer-events: none; }
-.inquiry-form select { appearance: none; cursor: pointer; padding-right: 42px; }
-.inquiry-form select option { background: #0b1017; color: white; }
+.select-wrap { position: relative; display: block; border-radius: 5px; }
+.select-wrap::before { content: ""; position: absolute; z-index: 1; width: 1px; height: 22px; right: 44px; top: 14px; background: rgba(255,255,255,.09); pointer-events: none; transition: background .2s; }
+.select-wrap::after { content: ""; position: absolute; z-index: 1; width: 8px; height: 8px; right: 18px; top: 18px; border-right: 1.5px solid var(--blue-bright); border-bottom: 1.5px solid var(--blue-bright); transform: rotate(45deg); pointer-events: none; transition: border-color .2s, transform .2s; }
+.select-wrap:hover::before, .select-wrap:focus-within::before { background: rgba(96,165,250,.25); }
+.select-wrap:focus-within::after { border-color: white; transform: translateY(3px) rotate(225deg); }
+.inquiry-form select { appearance: none; cursor: pointer; padding: 0 54px 0 16px; background: linear-gradient(145deg, #0b1017, #070a0f); color: #dce3eb; font-size: 13px; font-weight: 600; line-height: 1.2; box-shadow: inset 0 1px rgba(255,255,255,.025); }
+.inquiry-form select:hover { background: linear-gradient(145deg, #0e151e, #090d13); }
+.inquiry-form select:focus { background: #0b1119; }
+.inquiry-form select:invalid { color: #7e8895; }
+.inquiry-form select option { background: #0b1017; color: white; font-size: 14px; }
 .inquiry-form textarea { resize: vertical; }
 .form-status:empty { display: none; }
 .form-success, .form-error { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 22px; padding: 14px; border: 1px solid rgba(96,165,250,.4); border-radius: 5px; background: rgba(96,165,250,.09); color: var(--blue-bright); font-size: 13px; }
