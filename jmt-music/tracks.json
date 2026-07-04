@@ -1,109 +1,120 @@
 {
   "tracks": [
     {
+      "title": "Swagger",
+      "slug": "swagger",
+      "genre": "chill",
+      "mood": "Confident",
+      "bpm": 92,
+      "key": "F minor",
+      "coverImage": "/assets/covers/swagger.jpg",
+      "audioUrl": "/audio/swagger.mp3",
+      "shortDescription": "Cool, confident hip hop with an effortless late-night stride.",
+      "description": "A polished, spacious hip hop record built around an unhurried pocket, restrained melodic movement, and low end that lands without crowding the artist.",
+      "productionRole": "Production, arrangement, mix",
+      "productionNotes": "The arrangement grows through small tonal shifts and percussion details, keeping the center open for a vocal while preserving momentum.",
+      "beatstarsUrl": null,
+      "releaseDate": "2026-06-30",
+      "featured": true,
+      "tags": ["Confident", "Chill Hip Hop", "Late Night"]
+    },
+    {
       "title": "Heat Check",
       "slug": "heat-check",
-      "genre": "classic",
+      "genre": "trap",
+      "mood": "Intense",
       "bpm": 141,
-      "key": null,
-      "coverImage": "assets/covers/heat-check.jpg",
+      "key": "C minor",
+      "coverImage": "/assets/covers/heat-check.jpg",
       "audioUrl": "/audio/heat-check.mp3",
       "shortDescription": "Dark, cinematic trap built for high-energy moments.",
+      "description": "A dramatic trap production with tense orchestral color, commanding drums, and a structure designed for impact.",
+      "productionRole": "Production, keys, arrangement, mix",
+      "productionNotes": "The main motif was kept deliberately direct, allowing the drum programming and evolving transitions to carry the intensity.",
       "beatstarsUrl": null,
       "releaseDate": "2026-06-27",
       "featured": true,
-      "tags": ["Dark", "Anthem", "Cinematic Trap"]
+      "tags": ["Dark", "Anthem", "Cinematic"]
     },
     {
       "title": "Hoodie",
       "slug": "hoodie",
       "genre": "chill",
+      "mood": "Reflective",
       "bpm": 98,
-      "key": null,
-      "coverImage": "assets/covers/hoodie.jpg",
+      "key": "D minor",
+      "coverImage": "/assets/covers/hoodie.jpg",
       "audioUrl": "/audio/hoodie.mp3",
       "shortDescription": "Smooth hip hop with an easy, reflective pocket.",
+      "description": "A warm, artist-forward production that balances understated keys, conversational drums, and a relaxed melodic pocket.",
+      "productionRole": "Production, piano, arrangement",
+      "productionNotes": "Live keyboard phrasing gives the loop a human push and pull while the arrangement leaves generous room for storytelling.",
       "beatstarsUrl": null,
       "releaseDate": "2026-06-27",
       "featured": true,
-      "tags": ["J Cole", "Chill", "Hip Hop"]
+      "tags": ["Chill Hip Hop", "Soulful", "Reflective"]
     },
     {
       "title": "Why Not",
       "slug": "why-not",
-      "genre": "classic",
+      "genre": "trap",
+      "mood": "Atmospheric",
       "bpm": 96,
-      "key": null,
-      "coverImage": "assets/covers/why-not.jpg",
+      "key": "G minor",
+      "coverImage": "/assets/covers/why-not.jpg",
       "audioUrl": "/audio/why-not.mp3",
       "shortDescription": "Spacious melodic trap with heavyweight low end.",
+      "description": "An atmospheric trap record with wide melodic space, focused drums, and a low-end foundation built for modern vocals.",
+      "productionRole": "Production, sound design, mix",
+      "productionNotes": "Negative space is part of the arrangement. Textures arrive only when they add emotional scale or clarify a transition.",
       "beatstarsUrl": null,
       "releaseDate": "2026-06-27",
       "featured": true,
-      "tags": ["Travis Scott", "Future", "Metro Boomin"]
+      "tags": ["Melodic Trap", "Atmospheric", "Heavy"]
     },
     {
       "title": "TLKIN",
       "slug": "tlkin",
-      "genre": "chill",
+      "genre": "boom-bap",
+      "mood": "Late Night",
       "bpm": 84,
-      "key": null,
-      "coverImage": "assets/covers/tlkin.jpg",
+      "key": "A minor",
+      "coverImage": "/assets/covers/tlkin.jpg",
       "audioUrl": "/audio/tlkin.mp3",
       "shortDescription": "Laid-back hip hop for after-hours writing sessions.",
+      "description": "A conversational hip hop canvas shaped by dusty rhythm, gentle harmonic movement, and an after-hours atmosphere.",
+      "productionRole": "Production, sample treatment, mix",
+      "productionNotes": "The groove stays slightly behind the beat, creating a comfortable pocket that supports dense verses and relaxed melodic ideas.",
       "beatstarsUrl": null,
       "releaseDate": "2026-06-27",
       "featured": true,
-      "tags": ["Drake", "Mac Miller", "Late Night"]
+      "tags": ["Boom Bap", "Late Night", "Writing"]
     },
     {
       "title": "Backpack",
       "slug": "backpack",
       "genre": "lofi",
+      "mood": "Nostalgic",
       "bpm": 122,
-      "key": null,
-      "coverImage": "assets/covers/backpack.jpg",
+      "key": "E minor",
+      "coverImage": "/assets/covers/backpack.jpg",
       "audioUrl": "/audio/backpack.mp3",
       "shortDescription": "Warm, dusty hip hop for city drives and quiet focus.",
+      "description": "A textured lofi instrumental with worn-in harmony, soft drums, and enough movement to reward close listening.",
+      "productionRole": "Production, keys, arrangement",
+      "productionNotes": "The tonal character comes from layered keyboard performances and gentle degradation rather than a single static loop.",
       "beatstarsUrl": null,
       "releaseDate": "2026-06-27",
       "featured": true,
-      "tags": ["Summer Vibes", "Late Night", "Hip Hop"]
-    },
-    {
-      "title": "Swagger",
-      "slug": "swagger",
-      "genre": "chill",
-      "mood": "Confident",
-      "bpm": null,
-      "key": null,
-      "coverImage": "assets/covers/swagger.jpg",
-      "audioUrl": "/audio/swagger.mp3",
-      "shortDescription": "Cool, confident hip hop with an effortless late-night stride.",
-      "beatstarsUrl": null,
-      "releaseDate": "2026-06-30",
-      "featured": true,
-      "tags": ["Confident", "Chill Hip Hop", "Late Night"]
+      "tags": ["Lofi", "Warm", "Nostalgic"]
     }
   ],
   "genres": [
-    {
-      "id": "chill",
-      "name": "Chill Beats",
-      "description": "Smooth, atmospheric production for writing sessions, quiet focus, and after-hours listening.",
-      "path": "beats/chill/"
-    },
-    {
-      "id": "lofi",
-      "name": "Lofi Hip Hop Beats",
-      "description": "Warm textures, easy pockets, and lived-in grooves for low-key ideas and late-night loops.",
-      "path": "beats/lofi/"
-    },
-    {
-      "id": "classic",
-      "name": "Classic Hip Hop / Trap Beats",
-      "description": "Hard drums, cinematic tension, and modern low end rooted in timeless hip hop energy.",
-      "path": "beats/classic-hip-hop-trap/"
-    }
+    {"id": "chill", "name": "Chill Hip Hop"},
+    {"id": "trap", "name": "Trap"},
+    {"id": "boom-bap", "name": "Boom Bap"},
+    {"id": "lofi", "name": "Lofi"},
+    {"id": "piano", "name": "Piano"},
+    {"id": "cinematic", "name": "Cinematic"}
   ]
 }
