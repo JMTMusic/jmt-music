@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AlertCircle, CheckCircle2, LoaderCircle, Send } from "lucide-react";
 
 const FORM_ENDPOINT = "https://formsubmit.co/ajax/hello@jmtmusic.studio";
+const THANK_YOU_URL = "https://jmtmusic.studio/thank-you";
 
 export function ContactForm() {
   const [status, setStatus] = useState("idle");
@@ -29,16 +30,24 @@ export function ContactForm() {
       if (!response.ok) throw new Error("Form delivery failed");
       setStatus("success");
       form.reset();
+      window.location.assign(THANK_YOU_URL);
     } catch {
       setStatus("error");
     }
   };
 
   return (
-    <form className="inquiry-form" onSubmit={submitForm} noValidate>
+    <form
+      className="inquiry-form"
+      action="https://formsubmit.co/hello@jmtmusic.studio"
+      method="POST"
+      onSubmit={submitForm}
+      noValidate
+    >
       <input type="hidden" name="_subject" value="New JMT Music project inquiry" />
       <input type="hidden" name="_template" value="table" />
       <input type="hidden" name="_captcha" value="false" />
+      <input type="hidden" name="_next" value={THANK_YOU_URL} />
       <input type="text" name="_honey" tabIndex="-1" autoComplete="off" hidden />
 
       <div className="form-status" aria-live="polite">

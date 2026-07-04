@@ -3,22 +3,22 @@ const basePath = document.body.dataset.base || "";
 const instagramUrl = "https://www.instagram.com/jmtmusic05/";
 const beatstarsUrl = "https://www.beatstars.com/JMTMusic";
 const navItems = [
-  ["Home", "index.html", "home"],
-  ["Discover", "discover.html", "discover"],
-  ["Catalog", "catalog.html", "catalog"],
-  ["Sync Licensing", "sync.html", "sync"],
-  ["About", "about.html", "about"]
+  ["Home", "/", "home"],
+  ["Services", "/services", "services"],
+  ["Portfolio", "/portfolio", "portfolio"],
+  ["Beats", "/beats", "catalog"],
+  ["About", "/about", "about"]
 ];
 
 const header = document.querySelector("[data-header]");
 if (header) {
   header.innerHTML = `
     <div class="shell nav-wrap">
-      <a class="brand" href="${basePath}index.html"><span class="brand-mark">JMT</span><span>JMT MUSIC</span></a>
+      <a class="brand" href="/"><span class="brand-mark">JMT</span><span>JMT MUSIC</span></a>
       <button class="menu-button" type="button" aria-label="Open navigation"><span></span></button>
       <nav class="nav-links" aria-label="Primary">
-        ${navItems.map(([label, href, id]) => `<a href="${basePath}${href}" class="${page === id ? "active" : ""}">${label}</a>`).join("")}
-        <a class="nav-cta ${page === "contact" ? "active" : ""}" href="${basePath}contact.html">Contact</a>
+        ${navItems.map(([label, href, id]) => `<a href="${href}" class="${page === id ? "active" : ""}">${label}</a>`).join("")}
+        <a class="nav-cta ${page === "contact" ? "active" : ""}" href="/contact">Contact</a>
       </nav>
     </div>`;
   const menu = header.querySelector(".menu-button");
@@ -223,7 +223,7 @@ if (categoryRails && window.JMT_CATEGORIES) {
       <section class="catalog-rail">
         <div class="rail-heading">
           <div><span>0${index + 1}</span><h3>${category.name}</h3></div>
-          <a class="text-link" href="catalog.html?filter=${category.id}">View category</a>
+          <a class="text-link" href="/beats?filter=${category.id}">View category</a>
         </div>
         <div class="release-grid">${tracks.map(releaseCard).join("")}</div>
       </section>`;
@@ -246,7 +246,7 @@ if (genreCards && window.JMT_CATEGORIES) {
           <p class="eyebrow">Genre</p>
           <h3>${category.name}</h3>
           <p>${category.description}</p>
-          <a class="button button-small" href="${category.path}">Explore</a>
+          <a class="button button-small" href="/beats?filter=${category.id}">Explore</a>
         </div>
       </article>`;
   }).join("");
