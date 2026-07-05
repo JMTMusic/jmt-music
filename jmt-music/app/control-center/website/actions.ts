@@ -4,11 +4,11 @@ import { revalidatePath } from "next/cache";
 import { getControlCenterRole } from "@/lib/control-center/access";
 import { siteRegistry } from "@/lib/control-center/site-registry";
 import {
-  WEBSITE_SECTION_KEYS,
+  WEBSITE_PAGES,
   type CmsWebsiteSection,
   type WebsiteSectionContent,
-  type WebsiteSectionKey
-} from "@/lib/control-center/website-repository";
+  type WebsitePageKey
+} from "@/lib/control-center/website-types";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export type WebsiteActionResult = {
@@ -17,12 +17,19 @@ export type WebsiteActionResult = {
   section?: CmsWebsiteSection;
 };
 
-const DEFAULT_JMT_SECTIONS: Array<{ section_key: WebsiteSectionKey; title: string; sort_order: number }> = [
-  { section_key: "homepage-hero", title: "Homepage Hero", sort_order: 0 },
-  { section_key: "about", title: "About", sort_order: 10 },
-  { section_key: "services", title: "Services", sort_order: 20 },
-  { section_key: "contact", title: "Contact", sort_order: 30 },
-  { section_key: "footer", title: "Footer", sort_order: 40 }
+const DEFAULT_JMT_SECTIONS: Array<{ section_key: string; page_key: WebsitePageKey; title: string; sort_order: number }> = [
+  { section_key: "homepage-hero", page_key: "home", title: "Hero", sort_order: 0 },
+  { section_key: "about", page_key: "home", title: "About Preview", sort_order: 10 },
+  { section_key: "home-services", page_key: "home", title: "Services Preview", sort_order: 20 },
+  { section_key: "beats-hero", page_key: "beats", title: "Beats Hero", sort_order: 0 },
+  { section_key: "beats-library", page_key: "beats", title: "Beat Library", sort_order: 10 },
+  { section_key: "services", page_key: "services", title: "Services Hero", sort_order: 0 },
+  { section_key: "services-list", page_key: "services", title: "Services List", sort_order: 10 },
+  { section_key: "sync-hero", page_key: "sync", title: "Sync Hero", sort_order: 0 },
+  { section_key: "sync-details", page_key: "sync", title: "Sync Details", sort_order: 10 },
+  { section_key: "contact", page_key: "contact", title: "Contact Hero", sort_order: 0 },
+  { section_key: "contact-form", page_key: "contact", title: "Contact Form Intro", sort_order: 10 },
+  { section_key: "footer", page_key: "global", title: "Footer", sort_order: 0 }
 ];
 
 function optionalText(formData: FormData, key: string, max: number): string | null {
@@ -55,8 +62,7 @@ export async function setupJmtWebsiteSections(): Promise<WebsiteActionResult> {
     const { data: existing, error: existingError } = await supabase
       .from("website_sections")
       .select("section_key")
-      .eq("property_id", property.id)
-      .in("section_key", [...WEBSITE_SECTION_KEYS]);
+      .eq("property_id", property.id);
     if (existingError) return { status: "error", message: "Existing website sections could not be checked." };
 
     const existingKeys = new Set((existing || []).map((row) => row.section_key));
@@ -66,8 +72,10 @@ export async function setupJmtWebsiteSections(): Promise<WebsiteActionResult> {
     const { error } = await supabase.from("website_sections").upsert(
       missing.map((section) => ({
         property_id: property.id,
-        ...section,
-        content: {},
+        section_key: section.section_key,
+        title: section.title,
+        sort_order: section.sort_order,
+        content: { page_key: section.page_key },
         published: false,
         created_by: userId
       })),
@@ -93,9 +101,11 @@ export async function updateWebsiteSection(
   const sectionId = String(formData.get("section_id") || "");
   const propertySlug = String(formData.get("property") || "");
   const selectedSite = siteRegistry.find((site) => site.id === propertySlug);
-  const title = String(formData.get("title") || "").trim();
   const sortOrder = Number(String(formData.get("sort_order") || "0"));
+  const pageKey = String(formData.get("page_key") || "");
+  const validPageKey = WEBSITE_PAGES.some((page) => page.key === pageKey);
   const contentFields: WebsiteSectionContent = {
+    page_key: validPageKey ? pageKey as WebsitePageKey : undefined,
     eyebrow: optionalText(formData, "eyebrow", 80),
     heading: optionalText(formData, "heading", 160),
     body: optionalText(formData, "body", 5000),
@@ -106,7 +116,7 @@ export async function updateWebsiteSection(
   };
 
   if (!selectedSite) return { status: "error", message: "Select a valid property." };
-  if (title.length < 2 || title.length > 120) return { status: "error", message: "Section title must use 2–120 characters." };
+  if (!validPageKey) return { status: "error", message: "Select a valid website page." };
   if (!Number.isInteger(sortOrder) || sortOrder < 0 || sortOrder > 10000) return { status: "error", message: "Sort order must be a whole number from 0–10,000." };
   if (!validCmsUrl(contentFields.primary_cta_url as string | null) || !validCmsUrl(contentFields.secondary_cta_url as string | null)) {
     return { status: "error", message: "CTA links must be secure https:// URLs or internal paths beginning with /." };
@@ -118,11 +128,11 @@ export async function updateWebsiteSection(
     if (propertyError || !property) return { status: "error", message: "The selected property could not be found." };
     const { data: existing, error: sectionError } = await supabase
       .from("website_sections")
-      .select("id, section_key, content")
+      .select("id, section_key, title, content")
       .eq("id", sectionId)
       .eq("property_id", property.id)
       .maybeSingle();
-    if (sectionError || !existing || !WEBSITE_SECTION_KEYS.includes(existing.section_key as WebsiteSectionKey)) {
+    if (sectionError || !existing) {
       return { status: "error", message: "That section does not belong to the selected property." };
     }
 
@@ -130,7 +140,7 @@ export async function updateWebsiteSection(
     const { data, error } = await supabase
       .from("website_sections")
       .update({
-        title,
+        title: existing.title,
         content,
         published: formData.get("published") === "on",
         sort_order: sortOrder,
@@ -148,7 +158,8 @@ export async function updateWebsiteSection(
       message: "Website section saved.",
       section: {
         id: data.id,
-        sectionKey: data.section_key as WebsiteSectionKey,
+        sectionKey: data.section_key,
+        pageKey: ((data.content as WebsiteSectionContent | null)?.page_key || pageKey) as WebsitePageKey,
         title: data.title,
         content: (data.content as WebsiteSectionContent | null) || {},
         published: data.published,
