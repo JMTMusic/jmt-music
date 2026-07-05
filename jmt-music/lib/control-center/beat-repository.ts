@@ -6,12 +6,18 @@ import type { Beat, SiteConfig } from "./types";
 type BeatRow = {
   id: string;
   title: string;
+  slug: string;
+  description: string | null;
   artwork_path: string | null;
+  audio_path: string | null;
   genre: string | null;
   bpm: number | null;
   musical_key: string | null;
   release_date: string | null;
+  beatstars_url: string | null;
   featured: boolean;
+  published: boolean;
+  sort_order: number;
 };
 
 export type BeatLibraryResult = {
@@ -53,7 +59,7 @@ export async function getPropertyBeatLibrary(site: SiteConfig): Promise<BeatLibr
 
     const { data, error } = await supabase
       .from("beats")
-      .select("id, title, artwork_path, genre, bpm, musical_key, release_date, featured")
+      .select("id, title, slug, description, artwork_path, audio_path, genre, bpm, musical_key, release_date, beatstars_url, featured, published, sort_order")
       .eq("property_id", property.id)
       .order("sort_order", { ascending: true })
       .order("release_date", { ascending: false });
@@ -70,16 +76,28 @@ export async function getPropertyBeatLibrary(site: SiteConfig): Promise<BeatLibr
       const cover = row.artwork_path
         ? supabase.storage.from("beat-artwork").getPublicUrl(row.artwork_path).data.publicUrl
         : "/assets/jmt-studio-hero.png";
+      const audioUrl = row.audio_path
+        ? supabase.storage.from("beat-audio").getPublicUrl(row.audio_path).data.publicUrl
+        : null;
 
       return {
         id: row.id,
         title: row.title,
+        slug: row.slug,
+        description: row.description || "",
         cover,
+        artworkPath: row.artwork_path,
+        audioPath: row.audio_path,
+        audioUrl,
         genre: row.genre || "Uncategorized",
         bpm: row.bpm || 0,
         musicalKey: row.musical_key || "Not set",
         releaseDate: formatReleaseDate(row.release_date),
-        featured: row.featured
+        releaseDateValue: row.release_date,
+        beatstarsUrl: row.beatstars_url,
+        featured: row.featured,
+        published: row.published,
+        sortOrder: row.sort_order
       };
     });
 

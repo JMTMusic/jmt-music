@@ -9,12 +9,21 @@ export type NavigationItem = {
 export type Beat = {
   id: string;
   title: string;
+  slug?: string;
+  description?: string;
   cover: string;
+  artworkPath?: string | null;
+  audioPath?: string | null;
+  audioUrl?: string | null;
   genre: string;
   bpm: number;
   musicalKey: string;
   releaseDate: string;
+  releaseDateValue?: string | null;
+  beatstarsUrl?: string | null;
   featured: boolean;
+  published?: boolean;
+  sortOrder?: number;
 };
 
 export type Client = {
