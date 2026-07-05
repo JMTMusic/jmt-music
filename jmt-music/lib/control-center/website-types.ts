@@ -35,4 +35,5 @@ export type CmsWebsiteSection = {
   published: boolean;
   sortOrder: number;
   updatedAt: string;
+  persisted?: boolean;
 };

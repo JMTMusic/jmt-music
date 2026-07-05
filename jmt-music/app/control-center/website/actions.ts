@@ -11,6 +11,7 @@ import {
 } from "@/lib/control-center/website-types";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { BEAT_ARTWORK_MIME_TYPES, ensureWebsiteMediaBucket, WEBSITE_MEDIA_BUCKET, WEBSITE_MEDIA_MAX_BYTES } from "@/lib/supabase/storage";
+import { CURRENT_JMT_SITE_SECTIONS } from "@/lib/control-center/current-site-sections";
 
 export type WebsiteActionResult = {
   status: "error" | "success";
@@ -19,21 +20,6 @@ export type WebsiteActionResult = {
 };
 
 export type SectionMutation = "move-up" | "move-down" | "duplicate" | "toggle-hidden" | "delete" | "add-below" | "publish";
-
-const DEFAULT_JMT_SECTIONS: Array<{ section_key: string; page_key: WebsitePageKey; section_type: WebsiteSectionContent["section_type"]; title: string; sort_order: number }> = [
-  { section_key: "homepage-hero", page_key: "home", section_type: "hero", title: "Hero", sort_order: 0 },
-  { section_key: "about", page_key: "home", section_type: "text", title: "About Preview", sort_order: 10 },
-  { section_key: "home-services", page_key: "home", section_type: "services", title: "Services Preview", sort_order: 20 },
-  { section_key: "beats-hero", page_key: "beats", section_type: "hero", title: "Beats Hero", sort_order: 0 },
-  { section_key: "beats-library", page_key: "beats", section_type: "beat-grid", title: "Beat Library", sort_order: 10 },
-  { section_key: "services", page_key: "services", section_type: "hero", title: "Services Hero", sort_order: 0 },
-  { section_key: "services-list", page_key: "services", section_type: "services", title: "Services List", sort_order: 10 },
-  { section_key: "sync-hero", page_key: "sync", section_type: "hero", title: "Sync Hero", sort_order: 0 },
-  { section_key: "sync-details", page_key: "sync", section_type: "text", title: "Sync Details", sort_order: 10 },
-  { section_key: "contact", page_key: "contact", section_type: "hero", title: "Contact Hero", sort_order: 0 },
-  { section_key: "contact-form", page_key: "contact", section_type: "contact", title: "Contact Form", sort_order: 10 },
-  { section_key: "footer", page_key: "global", section_type: "cta", title: "Footer", sort_order: 0 }
-];
 
 function optionalText(formData: FormData, key: string, max: number): string | null {
   const value = String(formData.get(key) || "").trim();
@@ -64,13 +50,27 @@ export async function setupJmtWebsiteSections(): Promise<WebsiteActionResult> {
 
     const { data: existing, error: existingError } = await supabase
       .from("website_sections")
-      .select("section_key")
+      .select("id, section_key, content")
       .eq("property_id", property.id);
     if (existingError) return { status: "error", message: "Existing website sections could not be checked." };
 
     const existingKeys = new Set((existing || []).map((row) => row.section_key));
-    const missing = DEFAULT_JMT_SECTIONS.filter((section) => !existingKeys.has(section.section_key));
-    if (!missing.length) return { status: "success", message: "All default JMT Music sections already exist." };
+    const defaultsByKey = new Map(CURRENT_JMT_SITE_SECTIONS.map((section) => [section.section_key, section]));
+    const mergeResults = await Promise.all((existing || []).map((row) => {
+      const fallback = defaultsByKey.get(row.section_key);
+      if (!fallback) return Promise.resolve({ error: null });
+      return supabase
+        .from("website_sections")
+        .update({ content: { ...fallback.content, ...((row.content as WebsiteSectionContent | null) || {}) } })
+        .eq("id", row.id)
+        .eq("property_id", property.id);
+    }));
+    if (mergeResults.some((result) => result.error)) return { status: "error", message: "Existing website sections could not be initialized." };
+    const missing = CURRENT_JMT_SITE_SECTIONS.filter((section) => !existingKeys.has(section.section_key));
+    if (!missing.length) {
+      revalidatePath("/control-center/website");
+      return { status: "success", message: "Current website content is loaded and existing edits were preserved." };
+    }
 
     const { error } = await supabase.from("website_sections").upsert(
       missing.map((section) => ({
@@ -78,7 +78,7 @@ export async function setupJmtWebsiteSections(): Promise<WebsiteActionResult> {
         section_key: section.section_key,
         title: section.title,
         sort_order: section.sort_order,
-        content: { page_key: section.page_key, section_type: section.section_type, hidden: false },
+        content: section.content,
         published: false,
         created_by: userId
       })),
@@ -86,7 +86,7 @@ export async function setupJmtWebsiteSections(): Promise<WebsiteActionResult> {
     );
     if (error) return { status: "error", message: "Default website sections could not be created." };
     revalidatePath("/control-center/website");
-    return { status: "success", message: `${missing.length} default website section${missing.length === 1 ? " was" : "s were"} created.` };
+    return { status: "success", message: `${missing.length} current-site section${missing.length === 1 ? " was" : "s were"} loaded.` };
   } catch {
     return { status: "error", message: "Website section setup failed. Please try again." };
   }

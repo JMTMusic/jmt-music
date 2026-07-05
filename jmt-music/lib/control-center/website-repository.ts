@@ -8,6 +8,7 @@ import {
   type WebsitePageKey,
   type WebsiteSectionContent
 } from "@/lib/control-center/website-types";
+import { CURRENT_JMT_SITE_SECTIONS } from "@/lib/control-center/current-site-sections";
 
 export type WebsiteSectionsResult = {
   sections: CmsWebsiteSection[];
@@ -54,22 +55,39 @@ export async function getPropertyWebsiteSections(site: SiteConfig): Promise<Webs
       .eq("property_id", property.id)
       .order("sort_order", { ascending: true });
     if (error) return { sections: [], status: "error", detail: "Website sections could not be loaded." };
-    if (!data?.length) return { sections: [], status: "empty", detail: "No CMS sections exist for this property yet." };
-
-    const sections = (data as SectionRow[]).map((row) => {
-      const content = row.content || {};
+    const rows = (data || []) as SectionRow[];
+    if (site.id !== "jmt-music") {
+      if (!rows.length) return { sections: [], status: "empty", detail: "No CMS sections exist for this property yet." };
+      const sections = rows.map((row) => {
+        const content = row.content || {};
+        return { id: row.id, sectionKey: row.section_key, pageKey: resolvePageKey(row.section_key, content), title: row.title, content, published: row.published, sortOrder: row.sort_order, updatedAt: row.updated_at, persisted: true };
+      });
+      return { sections, status: "ready", detail: `${sections.length} CMS sections loaded from Supabase.` };
+    }
+    const rowByKey = new Map(rows.map((row) => [row.section_key, row]));
+    const mappedDefaults: CmsWebsiteSection[] = CURRENT_JMT_SITE_SECTIONS.map((fallback) => {
+      const row = rowByKey.get(fallback.section_key);
+      const content = { ...fallback.content, ...(row?.content || {}) };
       return {
-        id: row.id,
-        sectionKey: row.section_key,
-        pageKey: resolvePageKey(row.section_key, content),
-        title: row.title,
+        id: row?.id || `fallback-${fallback.section_key}`,
+        sectionKey: fallback.section_key,
+        pageKey: resolvePageKey(fallback.section_key, content),
+        title: row?.title || fallback.title,
         content,
-        published: row.published,
-        sortOrder: row.sort_order,
-        updatedAt: row.updated_at
+        published: row?.published || false,
+        sortOrder: row?.sort_order ?? fallback.sort_order,
+        updatedAt: row?.updated_at || "",
+        persisted: Boolean(row)
       };
     });
-    return { sections, status: "ready", detail: `${sections.length} CMS section${sections.length === 1 ? "" : "s"} loaded from Supabase.` };
+    const knownKeys = new Set(CURRENT_JMT_SITE_SECTIONS.map((section) => section.section_key));
+    const extraSections: CmsWebsiteSection[] = rows.filter((row) => !knownKeys.has(row.section_key)).map((row) => {
+      const content = row.content || {};
+      return { id: row.id, sectionKey: row.section_key, pageKey: resolvePageKey(row.section_key, content), title: row.title, content, published: row.published, sortOrder: row.sort_order, updatedAt: row.updated_at, persisted: true };
+    });
+    const sections = [...mappedDefaults, ...extraSections];
+    const fallbackCount = sections.filter((section) => !section.persisted).length;
+    return { sections, status: "ready", detail: fallbackCount ? `${fallbackCount} current-site section${fallbackCount === 1 ? " is" : "s are"} ready to load into Supabase.` : `${sections.length} CMS sections loaded from Supabase.` };
   } catch {
     return { sections: [], status: "error", detail: "Supabase is not configured or reachable." };
   }

@@ -25,6 +25,7 @@ export function WebsiteCms({ siteId, sections: initialSections, canEdit, loadSta
   const router = useRouter();
   useEffect(() => setSections(initialSections), [initialSections]);
   const pageSections = useMemo(() => sections.filter((section) => section.pageKey === page).sort((a, b) => a.sortOrder - b.sortOrder), [sections, page]);
+  const hasFallbacks = sections.some((section) => !section.persisted);
 
   const setup = async () => {
     setPending(true); setMessage("");
@@ -34,20 +35,21 @@ export function WebsiteCms({ siteId, sections: initialSections, canEdit, loadSta
   const publishPage = async () => {
     setPending(true); setMessage("");
     try {
-      const results = await Promise.all(pageSections.map((section) => mutateWebsiteSection({ sectionId: section.id, property: siteId, mutation: "publish" })));
+      const results = await Promise.all(pageSections.filter((section) => section.persisted).map((section) => mutateWebsiteSection({ sectionId: section.id, property: siteId, mutation: "publish" })));
       const failed = results.find((result) => result.status === "error");
       setMessage(failed?.message || "Page published to the staged snapshot.");
       if (!failed) router.refresh();
     } catch { setMessage("The page could not be published."); } finally { setPending(false); }
   };
 
-  if (loadStatus !== "ready") return <div><EmptyState title={loadStatus === "empty" ? "Your visual editor is ready to set up" : "Website editor unavailable"} message={loadDetail} />{siteId === "jmt-music" && canEdit && <div className="mt-5 flex justify-center"><button onClick={setup} disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-sky-300 px-5 text-sm font-semibold text-slate-950">{pending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}Create Default Sections</button></div>}</div>;
+  if (loadStatus !== "ready") return <div><EmptyState title={loadStatus === "empty" ? "Your visual editor is ready to set up" : "Website editor unavailable"} message={loadDetail} />{siteId === "jmt-music" && canEdit && <div className="mt-5 flex justify-center"><button onClick={setup} disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-sky-300 px-5 text-sm font-semibold text-slate-950">{pending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}Load Current Website Content</button></div>}</div>;
 
   return <div>
     <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-white/8 bg-[#080c12] p-3 lg:flex-row lg:items-center">
-      <div className="flex flex-1 gap-1 overflow-x-auto">{WEBSITE_PAGES.filter((item) => item.key !== "global").map((item) => <button key={item.key} onClick={() => setPage(item.key)} className={`whitespace-nowrap rounded-xl px-4 py-2.5 text-xs font-semibold transition ${page === item.key ? "bg-white/10 text-white" : "text-slate-500 hover:text-white"}`}>{item.label}</button>)}</div>
-      <div className="flex gap-2">{canEdit && <button onClick={() => setEditMode((value) => !value)} className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-semibold ${editMode ? "border-sky-300 bg-sky-300 text-slate-950" : "border-white/10 text-slate-200"}`}><Pencil className="h-3.5 w-3.5" />{editMode ? "Exit Edit Mode" : "Edit Website"}</button>}{canEdit && <button onClick={publishPage} disabled={pending || !pageSections.length} className="inline-flex items-center gap-2 rounded-xl border border-emerald-300/20 px-4 py-2.5 text-xs font-semibold text-emerald-200 disabled:opacity-50"><Rocket className="h-3.5 w-3.5" />Publish</button>}</div>
+      <div className="flex flex-1 gap-1 overflow-x-auto">{WEBSITE_PAGES.map((item) => <button key={item.key} onClick={() => setPage(item.key)} className={`whitespace-nowrap rounded-xl px-4 py-2.5 text-xs font-semibold transition ${page === item.key ? "bg-white/10 text-white" : "text-slate-500 hover:text-white"}`}>{item.label}</button>)}</div>
+      <div className="flex gap-2">{canEdit && <button onClick={() => setEditMode((value) => !value)} className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-semibold ${editMode ? "border-sky-300 bg-sky-300 text-slate-950" : "border-white/10 text-slate-200"}`}><Pencil className="h-3.5 w-3.5" />{editMode ? "Exit Edit Mode" : "Edit Website"}</button>}{canEdit && <button onClick={publishPage} disabled={pending || !pageSections.length || pageSections.some((section) => !section.persisted)} className="inline-flex items-center gap-2 rounded-xl border border-emerald-300/20 px-4 py-2.5 text-xs font-semibold text-emerald-200 disabled:opacity-50"><Rocket className="h-3.5 w-3.5" />Publish</button>}</div>
     </div>
+    {hasFallbacks && siteId === "jmt-music" && canEdit && <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-sky-300/20 bg-sky-300/[0.06] px-4 py-3"><div><p className="text-xs font-semibold text-sky-200">Previewing the current live-site content</p><p className="mt-1 text-[11px] text-slate-500">Load it into Supabase to begin editing. Existing CMS content will not be overwritten.</p></div><button onClick={setup} disabled={pending} className="inline-flex items-center gap-2 rounded-lg bg-sky-300 px-3 py-2 text-xs font-semibold text-slate-950 disabled:opacity-50">{pending ? <LoaderCircle className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}Load Current Website Content</button></div>}
     {message && <p role="status" className="mb-4 rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3 text-xs text-slate-300">{message}</p>}
     <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#05070a] shadow-2xl">
       <div className="flex h-14 items-center justify-between border-b border-white/8 bg-[#080b10] px-6"><span className="text-xs font-black tracking-[.14em]">JMT MUSIC</span><div className="hidden gap-5 text-[10px] font-semibold text-slate-500 sm:flex"><span>Home</span><span>Beats</span><span>Services</span><span>Sync</span><span>Contact</span></div><span className={`rounded-full px-2 py-1 text-[9px] font-bold uppercase ${editMode ? "bg-sky-300/10 text-sky-300" : "bg-emerald-300/10 text-emerald-300"}`}>{editMode ? "Editing draft" : "Preview"}</span></div>
@@ -66,15 +68,15 @@ function VisualSection({ section, siteId, canEdit, editMode, first, onMessage }:
   const content = section.content;
   const type = content.section_type || (first ? "hero" : "text");
   const hidden = Boolean(content.hidden);
-  const imageUrl = content.image_path ? getSupabaseBrowserClient().storage.from("website-media").getPublicUrl(content.image_path).data.publicUrl : null;
-  const edit = (field: string) => { if (editMode && canEdit) { setFocusField(field); setOpen(true); } };
+  const imageUrl = content.image_path ? getSupabaseBrowserClient().storage.from("website-media").getPublicUrl(content.image_path).data.publicUrl : typeof content.preview_image_url === "string" ? content.preview_image_url : null;
+  const edit = (field: string) => { if (!section.persisted) { onMessage("Load current website content before editing this section."); return; } if (editMode && canEdit) { setFocusField(field); setOpen(true); } };
   const mutate = async (mutation: SectionMutation) => {
     if (mutation === "delete" && !window.confirm(`Delete “${section.title}”?`)) return;
     setWorking(true);
     try { const result = await mutateWebsiteSection({ sectionId: section.id, property: siteId, mutation }); onMessage(result.message); if (result.status === "success") router.refresh(); }
     catch { onMessage("The section could not be updated."); } finally { setWorking(false); }
   };
-  const editable = editMode && canEdit;
+  const editable = editMode && canEdit && Boolean(section.persisted);
   const region = "relative cursor-default rounded outline-none transition " + (editable ? "hover:outline hover:outline-2 hover:outline-sky-300/70 hover:outline-offset-4" : "");
 
   return <section className={`group/section relative border-b border-white/8 ${hidden ? "opacity-40" : ""}`}>
@@ -96,7 +98,7 @@ function VisualSection({ section, siteId, canEdit, editMode, first, onMessage }:
   </section>;
 }
 
-function BeatGridPreview() { return <div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-sky-300">Featured beats</p><h2 className="mt-4 font-serif text-5xl">Find your starting point.</h2><div className="mt-10 grid gap-4 sm:grid-cols-3">{["Midnight Drive", "Blue Notes", "After Hours"].map((name, index) => <div key={name} className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.03]"><div className={`aspect-square bg-gradient-to-br ${index === 0 ? "from-sky-900 to-black" : index === 1 ? "from-indigo-900 to-slate-950" : "from-slate-700 to-black"}`} /><div className="p-4"><p className="font-serif text-xl">{name}</p><span className="text-[10px] text-slate-500">Preview beat</span></div></div>)}</div></div>; }
+function BeatGridPreview() { const beats = [["Swagger", "/assets/covers/swagger.jpg"], ["Heat Check", "/assets/covers/heat-check.jpg"], ["Hoodie", "/assets/covers/hoodie.jpg"]]; return <div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-sky-300">Featured work · Recent releases</p><h2 className="mt-4 font-serif text-5xl">The work speaks first.</h2><div className="mt-10 grid gap-4 sm:grid-cols-3">{beats.map(([name, cover]) => <div key={name} className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.03]"><img src={cover} alt="" className="aspect-square w-full object-cover" /><div className="p-4"><p className="font-serif text-xl">{name}</p><span className="text-[10px] text-slate-500">Current catalog</span></div></div>)}</div></div>; }
 function ServicesPreview() { return <div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-sky-300">Studio services</p><h2 className="mt-4 font-serif text-5xl">From direction to delivery.</h2><div className="mt-10 grid gap-px overflow-hidden rounded-lg bg-white/10 sm:grid-cols-3">{["Production", "Mixing & Mastering", "Piano & Keys"].map((name) => <div key={name} className="min-h-48 bg-[#080b10] p-6"><Settings2 className="h-5 w-5 text-sky-300" /><h3 className="mt-16 font-serif text-2xl">{name}</h3></div>)}</div></div>; }
 function ContactPreview({ content, edit, editable, region }: { content: CmsWebsiteSection["content"]; edit: (field: string) => void; editable: boolean; region: string }) { return <div className="grid gap-12 md:grid-cols-2"><div><button onClick={() => edit("heading")} className={`${region} text-left font-serif text-6xl`}>{content.heading || "Tell me what you're making."}</button><button onClick={() => edit("body")} className={`${region} mt-6 text-left text-slate-400`}>{content.body || "Share the vision, timeline, and where the project is right now."}</button></div><div className="rounded-lg border border-white/10 bg-white/[0.03] p-7"><div className="grid gap-4">{["Name", "Email", "Project type", "Tell us about the project"].map((label) => <div key={label} className="h-12 rounded border border-white/10 bg-black/20 px-4 py-3 text-xs text-slate-600">{label}</div>)}</div><button className="mt-5 h-12 w-full rounded bg-sky-400 text-xs font-bold text-slate-950">Send inquiry</button></div></div>; }
 
