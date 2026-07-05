@@ -1,12 +1,12 @@
 # Control Center storage setup
 
-Storage buckets are documented but intentionally not created by the database migrations. Create them in **Supabase Dashboard → Storage → New bucket** after reviewing the access model.
+Storage buckets are not created by the database migrations. The authorized Add Beat server workflow creates or normalizes `beat-artwork` immediately before its first upload. Future buckets should be created only when their corresponding feature is implemented.
 
 ## Buckets
 
 | Bucket | Public | Purpose | Recommended limits |
 | --- | --- | --- | --- |
-| `beat-artwork` | Yes | Published beat cover artwork | Images only; 10 MB |
+| `beat-artwork` | Yes | Published beat cover artwork; provisioned by Add Beat | Images only; 10 MB |
 | `beat-audio` | Yes | Published beat previews | Audio only; 100 MB |
 | `brand-assets` | Yes | Logos, marks, fonts, and approved public brand files | Images/fonts; 25 MB |
 | `website-media` | Yes | Public page photography, video thumbnails, and downloadable media | Images/video/PDF; 100 MB |
