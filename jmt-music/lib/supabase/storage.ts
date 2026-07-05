@@ -50,9 +50,13 @@ export async function ensureBeatAudioBucket(
     allowedMimeTypes: [...BEAT_AUDIO_MIME_TYPES]
   };
   const current = await supabase.storage.getBucket(BEAT_AUDIO_BUCKET);
-  const result = current.data
-    ? await supabase.storage.updateBucket(BEAT_AUDIO_BUCKET, options)
-    : await supabase.storage.createBucket(BEAT_AUDIO_BUCKET, options);
+  if (current.data) return { error: null };
+  if (current.error && !current.error.message.toLowerCase().includes("not found")) {
+    console.error("[beat-audio] Bucket lookup failed:", current.error.message);
+    return { error: current.error.message };
+  }
 
-  return { error: result.error?.message || null };
+  const created = await supabase.storage.createBucket(BEAT_AUDIO_BUCKET, options);
+  if (created.error) console.error("[beat-audio] Bucket creation failed:", created.error.message);
+  return { error: created.error?.message || null };
 }
