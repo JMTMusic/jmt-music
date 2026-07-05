@@ -7,7 +7,7 @@ Storage buckets are not created by the database migrations. The authorized Add B
 | Bucket | Public | Purpose | Recommended limits |
 | --- | --- | --- | --- |
 | `beat-artwork` | Yes | Published beat cover artwork; provisioned by Add Beat | Images only; 10 MB |
-| `beat-audio` | Yes | Published beat previews | Audio only; 100 MB |
+| `beat-audio` | Yes | Published beat previews; provisioned by Add Beat | MP3/WAV/M4A; 100 MB |
 | `brand-assets` | Yes | Logos, marks, fonts, and approved public brand files | Images/fonts; 25 MB |
 | `website-media` | Yes | Public page photography, video thumbnails, and downloadable media | Images/video/PDF; 100 MB |
 
