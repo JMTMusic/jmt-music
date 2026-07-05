@@ -4,6 +4,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export const BEAT_ARTWORK_BUCKET = "beat-artwork";
 export const BEAT_AUDIO_BUCKET = "beat-audio";
+export const WEBSITE_MEDIA_BUCKET = "website-media";
+export const WEBSITE_MEDIA_MAX_BYTES = 10 * 1024 * 1024;
 export const BEAT_ARTWORK_MAX_BYTES = 10 * 1024 * 1024;
 export const BEAT_AUDIO_MAX_BYTES = 100 * 1024 * 1024;
 export const BEAT_ARTWORK_MIME_TYPES = [
@@ -58,5 +60,18 @@ export async function ensureBeatAudioBucket(
 
   const created = await supabase.storage.createBucket(BEAT_AUDIO_BUCKET, options);
   if (created.error) console.error("[beat-audio] Bucket creation failed:", created.error.message);
+  return { error: created.error?.message || null };
+}
+
+/** Ensures the public website media bucket exists for authorized CMS uploads. */
+export async function ensureWebsiteMediaBucket(supabase: SupabaseClient): Promise<{ error: string | null }> {
+  const current = await supabase.storage.getBucket(WEBSITE_MEDIA_BUCKET);
+  if (current.data) return { error: null };
+  if (current.error && !current.error.message.toLowerCase().includes("not found")) return { error: current.error.message };
+  const created = await supabase.storage.createBucket(WEBSITE_MEDIA_BUCKET, {
+    public: true,
+    fileSizeLimit: WEBSITE_MEDIA_MAX_BYTES,
+    allowedMimeTypes: [...BEAT_ARTWORK_MIME_TYPES]
+  });
   return { error: created.error?.message || null };
 }

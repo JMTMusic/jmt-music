@@ -10,6 +10,7 @@ import {
   type WebsitePageKey
 } from "@/lib/control-center/website-types";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { BEAT_ARTWORK_MIME_TYPES, ensureWebsiteMediaBucket, WEBSITE_MEDIA_BUCKET, WEBSITE_MEDIA_MAX_BYTES } from "@/lib/supabase/storage";
 
 export type WebsiteActionResult = {
   status: "error" | "success";
@@ -17,19 +18,21 @@ export type WebsiteActionResult = {
   section?: CmsWebsiteSection;
 };
 
-const DEFAULT_JMT_SECTIONS: Array<{ section_key: string; page_key: WebsitePageKey; title: string; sort_order: number }> = [
-  { section_key: "homepage-hero", page_key: "home", title: "Hero", sort_order: 0 },
-  { section_key: "about", page_key: "home", title: "About Preview", sort_order: 10 },
-  { section_key: "home-services", page_key: "home", title: "Services Preview", sort_order: 20 },
-  { section_key: "beats-hero", page_key: "beats", title: "Beats Hero", sort_order: 0 },
-  { section_key: "beats-library", page_key: "beats", title: "Beat Library", sort_order: 10 },
-  { section_key: "services", page_key: "services", title: "Services Hero", sort_order: 0 },
-  { section_key: "services-list", page_key: "services", title: "Services List", sort_order: 10 },
-  { section_key: "sync-hero", page_key: "sync", title: "Sync Hero", sort_order: 0 },
-  { section_key: "sync-details", page_key: "sync", title: "Sync Details", sort_order: 10 },
-  { section_key: "contact", page_key: "contact", title: "Contact Hero", sort_order: 0 },
-  { section_key: "contact-form", page_key: "contact", title: "Contact Form Intro", sort_order: 10 },
-  { section_key: "footer", page_key: "global", title: "Footer", sort_order: 0 }
+export type SectionMutation = "move-up" | "move-down" | "duplicate" | "toggle-hidden" | "delete" | "add-below" | "publish";
+
+const DEFAULT_JMT_SECTIONS: Array<{ section_key: string; page_key: WebsitePageKey; section_type: WebsiteSectionContent["section_type"]; title: string; sort_order: number }> = [
+  { section_key: "homepage-hero", page_key: "home", section_type: "hero", title: "Hero", sort_order: 0 },
+  { section_key: "about", page_key: "home", section_type: "text", title: "About Preview", sort_order: 10 },
+  { section_key: "home-services", page_key: "home", section_type: "services", title: "Services Preview", sort_order: 20 },
+  { section_key: "beats-hero", page_key: "beats", section_type: "hero", title: "Beats Hero", sort_order: 0 },
+  { section_key: "beats-library", page_key: "beats", section_type: "beat-grid", title: "Beat Library", sort_order: 10 },
+  { section_key: "services", page_key: "services", section_type: "hero", title: "Services Hero", sort_order: 0 },
+  { section_key: "services-list", page_key: "services", section_type: "services", title: "Services List", sort_order: 10 },
+  { section_key: "sync-hero", page_key: "sync", section_type: "hero", title: "Sync Hero", sort_order: 0 },
+  { section_key: "sync-details", page_key: "sync", section_type: "text", title: "Sync Details", sort_order: 10 },
+  { section_key: "contact", page_key: "contact", section_type: "hero", title: "Contact Hero", sort_order: 0 },
+  { section_key: "contact-form", page_key: "contact", section_type: "contact", title: "Contact Form", sort_order: 10 },
+  { section_key: "footer", page_key: "global", section_type: "cta", title: "Footer", sort_order: 0 }
 ];
 
 function optionalText(formData: FormData, key: string, max: number): string | null {
@@ -75,7 +78,7 @@ export async function setupJmtWebsiteSections(): Promise<WebsiteActionResult> {
         section_key: section.section_key,
         title: section.title,
         sort_order: section.sort_order,
-        content: { page_key: section.page_key },
+        content: { page_key: section.page_key, section_type: section.section_type, hidden: false },
         published: false,
         created_by: userId
       })),
@@ -112,7 +115,12 @@ export async function updateWebsiteSection(
     primary_cta_label: optionalText(formData, "primary_cta_label", 80),
     primary_cta_url: optionalText(formData, "primary_cta_url", 500),
     secondary_cta_label: optionalText(formData, "secondary_cta_label", 80),
-    secondary_cta_url: optionalText(formData, "secondary_cta_url", 500)
+    secondary_cta_url: optionalText(formData, "secondary_cta_url", 500),
+    image_path: optionalText(formData, "image_path", 1000),
+    image_position: {
+      x: Math.max(0, Math.min(100, Number(formData.get("image_position_x") || 50))),
+      y: Math.max(0, Math.min(100, Number(formData.get("image_position_y") || 50)))
+    }
   };
 
   if (!selectedSite) return { status: "error", message: "Select a valid property." };
@@ -128,12 +136,16 @@ export async function updateWebsiteSection(
     if (propertyError || !property) return { status: "error", message: "The selected property could not be found." };
     const { data: existing, error: sectionError } = await supabase
       .from("website_sections")
-      .select("id, section_key, title, content")
+      .select("id, section_key, title, content, published")
       .eq("id", sectionId)
       .eq("property_id", property.id)
       .maybeSingle();
     if (sectionError || !existing) {
       return { status: "error", message: "That section does not belong to the selected property." };
+    }
+    if (contentFields.image_path && contentFields.image_path !== (existing.content as WebsiteSectionContent | null)?.image_path
+      && !contentFields.image_path.startsWith(`${property.id}/${existing.id}/`)) {
+      return { status: "error", message: "That image does not belong to this website section." };
     }
 
     const content = { ...((existing.content as WebsiteSectionContent | null) || {}), ...contentFields };
@@ -142,7 +154,7 @@ export async function updateWebsiteSection(
       .update({
         title: existing.title,
         content,
-        published: formData.get("published") === "on",
+        published: existing.published,
         sort_order: sortOrder,
         updated_at: new Date().toISOString()
       })
@@ -169,5 +181,115 @@ export async function updateWebsiteSection(
     };
   } catch {
     return { status: "error", message: "The website section could not be saved. Please try again." };
+  }
+}
+
+/** Creates a signed, property/section-scoped upload for visual-editor imagery. */
+export async function prepareWebsiteImageUpload(input: {
+  property: string;
+  sectionId: string;
+  type: string;
+  size: number;
+}): Promise<{ status: "error" | "success"; message: string; path?: string; token?: string; bucket?: string }> {
+  const role = await getControlCenterRole();
+  if (role !== "owner" && role !== "editor") return { status: "error", message: "You do not have permission to upload website media." };
+  if (!BEAT_ARTWORK_MIME_TYPES.includes(input.type as typeof BEAT_ARTWORK_MIME_TYPES[number]) || input.size > WEBSITE_MEDIA_MAX_BYTES) {
+    return { status: "error", message: "Use a JPG, PNG, WebP, or AVIF image no larger than 10 MB." };
+  }
+  const selectedSite = siteRegistry.find((site) => site.id === input.property);
+  if (!selectedSite) return { status: "error", message: "Select a valid property." };
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { data: property } = await supabase.from("properties").select("id").eq("slug", selectedSite.id).maybeSingle();
+    if (!property) return { status: "error", message: "The selected property could not be found." };
+    const { data: section } = await supabase.from("website_sections").select("id").eq("id", input.sectionId).eq("property_id", property.id).maybeSingle();
+    if (!section) return { status: "error", message: "That section does not belong to the selected property." };
+    const bucket = await ensureWebsiteMediaBucket(supabase);
+    if (bucket.error) return { status: "error", message: "Website media storage is unavailable." };
+    const path = `${property.id}/${section.id}/${crypto.randomUUID()}.webp`;
+    const signed = await supabase.storage.from(WEBSITE_MEDIA_BUCKET).createSignedUploadUrl(path);
+    if (signed.error) return { status: "error", message: "The image upload could not be prepared." };
+    return { status: "success", message: "Upload prepared.", path, token: signed.data.token, bucket: WEBSITE_MEDIA_BUCKET };
+  } catch {
+    return { status: "error", message: "The image upload could not be prepared." };
+  }
+}
+
+/** Performs visual-builder section operations without exposing property identifiers. */
+export async function mutateWebsiteSection(input: {
+  sectionId: string;
+  property: string;
+  mutation: SectionMutation;
+}): Promise<WebsiteActionResult> {
+  const userId = process.env.CONTROL_CENTER_SUPABASE_USER_ID;
+  if (!userId) return { status: "error", message: "Control Center user mapping is not configured." };
+  const role = await getControlCenterRole();
+  if (role !== "owner" && role !== "editor") return { status: "error", message: "You do not have permission to change website sections." };
+  const selectedSite = siteRegistry.find((site) => site.id === input.property);
+  if (!selectedSite) return { status: "error", message: "Select a valid property." };
+  const allowed: SectionMutation[] = ["move-up", "move-down", "duplicate", "toggle-hidden", "delete", "add-below", "publish"];
+  if (!allowed.includes(input.mutation)) return { status: "error", message: "That section action is not supported." };
+
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { data: property } = await supabase.from("properties").select("id").eq("slug", selectedSite.id).maybeSingle();
+    if (!property) return { status: "error", message: "The selected property could not be found." };
+    const { data: section } = await supabase.from("website_sections").select("*").eq("id", input.sectionId).eq("property_id", property.id).maybeSingle();
+    if (!section) return { status: "error", message: "That section does not belong to the selected property." };
+    const content = (section.content as WebsiteSectionContent | null) || {};
+
+    if (input.mutation === "delete") {
+      const { error } = await supabase.from("website_sections").delete().eq("id", section.id).eq("property_id", property.id);
+      if (error) return { status: "error", message: "The section could not be deleted." };
+    } else if (input.mutation === "toggle-hidden") {
+      const { error } = await supabase.from("website_sections").update({ content: { ...content, hidden: !content.hidden } }).eq("id", section.id).eq("property_id", property.id);
+      if (error) return { status: "error", message: "Section visibility could not be changed." };
+    } else if (input.mutation === "publish") {
+      const { published_snapshot: _previous, ...draft } = content;
+      const { error } = await supabase.from("website_sections").update({ content: { ...content, published_snapshot: draft }, published: true }).eq("id", section.id).eq("property_id", property.id);
+      if (error) return { status: "error", message: "The section could not be published." };
+    } else if (input.mutation === "duplicate" || input.mutation === "add-below") {
+      const duplicate = input.mutation === "duplicate";
+      let inserted = false;
+      for (let index = 1; index <= 100 && !inserted; index += 1) {
+        const key = `${section.section_key}-${duplicate ? "copy" : "section"}${index === 1 ? "" : `-${index}`}`;
+        const { error } = await supabase.from("website_sections").insert({
+          property_id: property.id,
+          section_key: key,
+          title: duplicate ? `${section.title} Copy` : "New Text Section",
+          content: duplicate ? { ...content, published_snapshot: undefined } : {
+            page_key: content.page_key || "home",
+            section_type: "text",
+            hidden: false,
+            heading: "New section",
+            body: "Click Edit to replace this text."
+          },
+          published: false,
+          sort_order: section.sort_order + (duplicate ? 1 : 5),
+          created_by: userId
+        });
+        if (!error) inserted = true;
+        else if (error.code !== "23505") return { status: "error", message: "The new section could not be created." };
+      }
+      if (!inserted) return { status: "error", message: "A unique section key could not be generated." };
+    } else {
+      const ascending = input.mutation === "move-down";
+      let query = supabase.from("website_sections").select("id, section_key, sort_order, content").eq("property_id", property.id);
+      query = ascending ? query.gt("sort_order", section.sort_order).order("sort_order", { ascending: true }) : query.lt("sort_order", section.sort_order).order("sort_order", { ascending: false });
+      const { data: candidates } = await query.limit(20);
+      const pageFor = (key: string, value: WebsiteSectionContent) => value.page_key
+        || (key === "services" ? "services" : key === "contact" ? "contact" : key === "footer" ? "global" : key.split("-")[0] === "sync" ? "sync" : key.split("-")[0] === "beats" ? "beats" : "home");
+      const currentPage = pageFor(section.section_key, content);
+      const sibling = candidates?.find((candidate) => pageFor(candidate.section_key, (candidate.content as WebsiteSectionContent | null) || {}) === currentPage);
+      if (sibling) {
+        const { error: firstError } = await supabase.from("website_sections").update({ sort_order: sibling.sort_order }).eq("id", section.id);
+        const { error: secondError } = await supabase.from("website_sections").update({ sort_order: section.sort_order }).eq("id", sibling.id);
+        if (firstError || secondError) return { status: "error", message: "The section order could not be changed." };
+      }
+    }
+    revalidatePath("/control-center/website");
+    return { status: "success", message: input.mutation === "publish" ? "Section published to the staged snapshot." : "Section updated." };
+  } catch {
+    return { status: "error", message: "The section action could not be completed." };
   }
 }

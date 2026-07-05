@@ -18,6 +18,11 @@ export type WebsiteSectionContent = {
   secondary_cta_label?: string | null;
   secondary_cta_url?: string | null;
   page_key?: WebsitePageKey;
+  section_type?: "hero" | "text" | "image" | "gallery" | "beat-grid" | "services" | "cta" | "contact" | "testimonials";
+  hidden?: boolean;
+  image_path?: string | null;
+  image_position?: { x: number; y: number };
+  published_snapshot?: Omit<WebsiteSectionContent, "published_snapshot">;
   [key: string]: unknown;
 };
 
