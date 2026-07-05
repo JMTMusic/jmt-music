@@ -21,6 +21,10 @@ export function SiteShell({ children }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
+  if (pathname.startsWith("/control-center")) {
+    return children;
+  }
+
   return (
     <AudioProvider>
       <header className="site-header">

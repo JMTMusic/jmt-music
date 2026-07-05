@@ -28,6 +28,21 @@ NEXT_PUBLIC_CLARITY_ID=xxxxxxxxxx
 
 The site sends `beat_audio_play`, `beatstars_link_click`, `contact_form_submit`, and `service_cta_click` events. No analytics ID is committed to the repository.
 
+## Control Center
+
+The private business dashboard is available at `/control-center`. Every route below that path is protected by server-side HTTP Basic authentication in `middleware.ts`; it is not a client-side visibility toggle. The route also sends `noindex`, `nofollow`, `nocache`, and `no-referrer` metadata.
+
+Add these server-only variables in **Vercel → Project → Settings → Environment Variables** for Production (and Preview if needed):
+
+```bash
+CONTROL_CENTER_USERNAME=your-private-username
+CONTROL_CENTER_PASSWORD=use-a-long-unique-password
+```
+
+Do not prefix these values with `NEXT_PUBLIC_`. If either value is missing, the Control Center fails closed with HTTP 503. After adding or rotating credentials, redeploy the project.
+
+The application now uses the standard Next.js server deployment rather than `output: "export"`. Public pages remain statically generated where possible, while `/control-center` is dynamically served behind middleware. Phase 1 dashboard values are representative server-only data; Google Analytics Data API access, CMS editing, uploads, messaging, and other write operations are intentionally not implemented.
+
 ## Content
 
 `tracks.json` is the single source of truth for the portfolio, beat catalog, project pages, artwork, audio, metadata, and licensing URLs. Add a track there and the static project page is generated automatically.
@@ -38,4 +53,4 @@ The site sends `beat_audio_play`, `beatstars_link_click`, `contact_form_submit`,
 npm run build
 ```
 
-Next.js exports the production site to `out/` for static hosting.
+Next.js statically optimizes public routes and deploys the protected Control Center through the Next.js runtime.
