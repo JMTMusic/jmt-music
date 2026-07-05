@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import Cropper, { type Area } from "react-easy-crop";
-import { Check, LoaderCircle, Plus, X } from "lucide-react";
+import { Check, Copy, LoaderCircle, Plus, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
   cleanupBeatUploads,
   createBeat,
+  deleteBeat,
+  duplicateBeat,
   prepareBeatUploads,
   updateBeat,
   type CreateBeatState
@@ -43,6 +45,7 @@ export function AddBeatDialog({ propertyId, disabled = false, beat, trigger }: B
   const [audio, setAudio] = useState<File | null>(null);
   const [audioPreview, setAudioPreview] = useState<string | null>(null);
   const [audioError, setAudioError] = useState("");
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
 
@@ -187,6 +190,39 @@ export function AddBeatDialog({ propertyId, disabled = false, beat, trigger }: B
     }
   };
 
+  const runDuplicate = async () => {
+    if (!beat) return;
+    setPending(true);
+    setState(initialState);
+    try {
+      const result = await duplicateBeat({ beatId: beat.id, property: propertyId });
+      setState(result);
+      if (result.status === "success") {
+        router.refresh();
+        setOpen(false);
+      }
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const runDelete = async () => {
+    if (!beat) return;
+    setPending(true);
+    setState(initialState);
+    try {
+      const result = await deleteBeat({ beatId: beat.id, property: propertyId });
+      setState(result);
+      if (result.status === "success") {
+        setDeleteConfirmOpen(false);
+        router.refresh();
+        setOpen(false);
+      }
+    } finally {
+      setPending(false);
+    }
+  };
+
   return (
     <>
       {trigger ? (
@@ -221,8 +257,23 @@ export function AddBeatDialog({ propertyId, disabled = false, beat, trigger }: B
             </div>
             <div className="mt-5 flex flex-wrap gap-5 rounded-xl border border-white/8 bg-white/[0.025] p-4"><label className="flex items-center gap-2 text-xs font-medium text-slate-300"><input type="checkbox" name="featured" className="accent-sky-300" defaultChecked={beat?.featured} />Featured</label><label className="flex items-center gap-2 text-xs font-medium text-slate-300"><input type="checkbox" name="published" className="accent-sky-300" defaultChecked={beat?.published} />Published</label></div>
             {state.status === "error" && <p role="alert" className="mt-5 rounded-xl border border-red-400/20 bg-red-400/[0.06] p-3 text-xs text-red-200">{state.message}</p>}
-            <footer className="mt-6 flex justify-end gap-3"><button type="button" disabled={pending} onClick={() => setOpen(false)} className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-slate-300">Cancel</button><button type="submit" disabled={pending || Boolean(artworkError || audioError || cropOpen)} className="inline-flex min-w-32 items-center justify-center gap-2 rounded-xl bg-sky-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-60">{pending ? <><LoaderCircle className="h-4 w-4 animate-spin" />{editing ? "Saving" : "Uploading"}</> : <><Check className="h-4 w-4" />{editing ? "Save Changes" : "Create Beat"}</>}</button></footer>
+            <footer className="mt-6 flex flex-wrap items-center gap-3">
+              {beat && <div className="flex gap-2">
+                <button type="button" disabled={pending} onClick={() => setDeleteConfirmOpen(true)} className="inline-flex items-center gap-2 rounded-xl border border-red-400/20 px-4 py-2.5 text-sm font-semibold text-red-300 transition hover:bg-red-400/10 disabled:opacity-50"><Trash2 className="h-4 w-4" />Delete</button>
+                <button type="button" disabled={pending} onClick={runDuplicate} className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-slate-300 transition hover:border-sky-300/30 hover:text-white disabled:opacity-50"><Copy className="h-4 w-4" />Duplicate</button>
+              </div>}
+              <div className="ml-auto flex gap-3"><button type="button" disabled={pending} onClick={() => setOpen(false)} className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-slate-300">Cancel</button><button type="submit" disabled={pending || Boolean(artworkError || audioError || cropOpen)} className="inline-flex min-w-32 items-center justify-center gap-2 rounded-xl bg-sky-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-60">{pending ? <><LoaderCircle className="h-4 w-4 animate-spin" />{editing ? "Working" : "Uploading"}</> : <><Check className="h-4 w-4" />{editing ? "Save Changes" : "Create Beat"}</>}</button></div>
+            </footer>
           </form>
+        </section>
+      </div>}
+      {deleteConfirmOpen && beat && <div className="fixed inset-0 z-[130] grid place-items-center bg-black/85 p-4 backdrop-blur-sm">
+        <section role="alertdialog" aria-modal="true" aria-labelledby="delete-beat-title" aria-describedby="delete-beat-description" className="w-full max-w-md rounded-2xl border border-red-400/20 bg-[#0a0f16] p-6 shadow-2xl">
+          <div className="grid h-11 w-11 place-items-center rounded-xl bg-red-400/10 text-red-300"><Trash2 className="h-5 w-5" /></div>
+          <h2 id="delete-beat-title" className="mt-5 font-sans text-xl font-semibold">Delete “{beat.title}”?</h2>
+          <p id="delete-beat-description" className="mt-2 text-sm leading-6 text-slate-400">This deletes the beat record from the library. Artwork and audio files will remain in storage.</p>
+          {state.status === "error" && <p role="alert" className="mt-4 rounded-xl border border-red-400/20 bg-red-400/[0.06] p-3 text-xs text-red-200">{state.message}</p>}
+          <div className="mt-6 flex justify-end gap-3"><button type="button" disabled={pending} onClick={() => setDeleteConfirmOpen(false)} className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-slate-300">Keep Beat</button><button type="button" disabled={pending} onClick={runDelete} className="inline-flex min-w-32 items-center justify-center gap-2 rounded-xl bg-red-400 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-60">{pending ? <><LoaderCircle className="h-4 w-4 animate-spin" />Deleting</> : <><Trash2 className="h-4 w-4" />Delete Beat</>}</button></div>
         </section>
       </div>}
       {cropOpen && sourceImage && <div className="fixed inset-0 z-[120] grid place-items-center bg-black/90 p-4"><section className="w-full max-w-xl rounded-2xl border border-white/10 bg-[#0a0f16] p-5"><div className="flex items-center justify-between"><div><h2 className="font-sans text-lg font-semibold">Position cover artwork</h2><p className="mt-1 text-xs text-slate-500">Drag to reposition. Use the slider to zoom.</p></div><button onClick={() => setCropOpen(false)} aria-label="Cancel crop"><X /></button></div><div className="relative mt-5 aspect-square overflow-hidden rounded-xl bg-black"><Cropper image={sourceImage} crop={crop} zoom={zoom} aspect={1} onCropChange={setCrop} onZoomChange={setZoom} onCropComplete={(_area, pixels) => setCropPixels(pixels)} /></div><label className="mt-5 block text-xs font-semibold text-slate-300">Zoom<input className="mt-2 w-full accent-sky-300" type="range" min="1" max="3" step="0.01" value={zoom} onChange={(event) => setZoom(Number(event.target.value))} /></label><div className="mt-5 flex justify-end gap-3"><button className="rounded-xl border border-white/10 px-4 py-2.5 text-sm" onClick={() => setCropOpen(false)}>Cancel</button><button className="rounded-xl bg-sky-300 px-4 py-2.5 text-sm font-semibold text-slate-950" onClick={saveCrop}>Use Crop</button></div></section></div>}

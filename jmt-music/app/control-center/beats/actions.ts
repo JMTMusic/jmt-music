@@ -21,6 +21,10 @@ export type CreateBeatState = {
   fieldErrors?: Record<string, string>;
 };
 export type BeatMutationState = CreateBeatState;
+export type BeatRecordActionResult = {
+  status: "error" | "success";
+  message: string;
+};
 
 const initialState: CreateBeatState = { status: "idle", message: "" };
 const ARTWORK_TYPES: Record<string, string> = {
@@ -260,6 +264,114 @@ export async function updateBeat(
     return { status: "success", message: "Beat updated successfully." };
   } catch {
     return { status: "error", message: "The beat could not be updated. Please try again." };
+  }
+}
+
+/** Deletes only the property-scoped database record; storage objects are retained. */
+export async function deleteBeat(input: {
+  beatId: string;
+  property: string;
+}): Promise<BeatRecordActionResult> {
+  if (!process.env.CONTROL_CENTER_SUPABASE_USER_ID) {
+    return { status: "error", message: "Control Center user mapping is not configured." };
+  }
+  const selectedSite = siteRegistry.find((site) => site.id === input.property);
+  if (!selectedSite) return { status: "error", message: "Select a valid property." };
+
+  try {
+    const role = await getControlCenterRole();
+    if (role !== "owner" && role !== "editor") {
+      return { status: "error", message: "You do not have permission to delete beats." };
+    }
+    const supabase = createSupabaseAdminClient();
+    const { data: property, error: propertyError } = await supabase
+      .from("properties")
+      .select("id")
+      .eq("slug", selectedSite.id)
+      .maybeSingle();
+    if (propertyError || !property) return { status: "error", message: "The selected property could not be found." };
+
+    const { data: beat, error: beatError } = await supabase
+      .from("beats")
+      .select("id")
+      .eq("id", input.beatId)
+      .eq("property_id", property.id)
+      .maybeSingle();
+    if (beatError || !beat) return { status: "error", message: "That beat does not belong to the selected property." };
+
+    const { error } = await supabase
+      .from("beats")
+      .delete()
+      .eq("id", beat.id)
+      .eq("property_id", property.id);
+    if (error) return { status: "error", message: "The beat could not be deleted." };
+
+    revalidatePath("/control-center/beats");
+    return { status: "success", message: "Beat deleted successfully." };
+  } catch {
+    return { status: "error", message: "The beat could not be deleted. Please try again." };
+  }
+}
+
+/** Creates an unpublished, unfeatured property-scoped copy of one real beat. */
+export async function duplicateBeat(input: {
+  beatId: string;
+  property: string;
+}): Promise<BeatRecordActionResult> {
+  const userId = process.env.CONTROL_CENTER_SUPABASE_USER_ID;
+  if (!userId) return { status: "error", message: "Control Center user mapping is not configured." };
+  const selectedSite = siteRegistry.find((site) => site.id === input.property);
+  if (!selectedSite) return { status: "error", message: "Select a valid property." };
+
+  try {
+    const role = await getControlCenterRole();
+    if (role !== "owner" && role !== "editor") {
+      return { status: "error", message: "You do not have permission to duplicate beats." };
+    }
+    const supabase = createSupabaseAdminClient();
+    const { data: property, error: propertyError } = await supabase
+      .from("properties")
+      .select("id")
+      .eq("slug", selectedSite.id)
+      .maybeSingle();
+    if (propertyError || !property) return { status: "error", message: "The selected property could not be found." };
+
+    const { data: source, error: sourceError } = await supabase
+      .from("beats")
+      .select("title, slug, description, genre, bpm, musical_key, beatstars_url, sort_order, artwork_path, audio_path")
+      .eq("id", input.beatId)
+      .eq("property_id", property.id)
+      .maybeSingle();
+    if (sourceError || !source) return { status: "error", message: "That beat does not belong to the selected property." };
+
+    for (let copyNumber = 1; copyNumber <= 100; copyNumber += 1) {
+      const suffix = copyNumber === 1 ? "-copy" : `-copy-${copyNumber}`;
+      const slug = `${source.slug}${suffix}`;
+      const { error } = await supabase.from("beats").insert({
+        property_id: property.id,
+        title: `${source.title} Copy`,
+        slug,
+        description: source.description,
+        genre: source.genre,
+        bpm: source.bpm,
+        musical_key: source.musical_key,
+        beatstars_url: source.beatstars_url,
+        sort_order: source.sort_order,
+        artwork_path: source.artwork_path,
+        audio_path: source.audio_path,
+        featured: false,
+        published: false,
+        created_by: userId
+      });
+      if (!error) {
+        revalidatePath("/control-center/beats");
+        return { status: "success", message: `Beat duplicated as “${source.title} Copy”.` };
+      }
+      if (error.code !== "23505") return { status: "error", message: "The beat could not be duplicated." };
+    }
+    return { status: "error", message: "A unique copy slug could not be generated." };
+  } catch {
+    return { status: "error", message: "The beat could not be duplicated. Please try again." };
   }
 }
 
