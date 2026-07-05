@@ -37,9 +37,10 @@ Add these server-only variables in **Vercel → Project → Settings → Environ
 ```bash
 CONTROL_CENTER_USERNAME=your-private-username
 CONTROL_CENTER_PASSWORD=use-a-long-unique-password
+CONTROL_CENTER_SUPABASE_USER_ID=the-auth-user-uuid-for-this-login
 ```
 
-Do not prefix these values with `NEXT_PUBLIC_`. If either value is missing, the Control Center fails closed with HTTP 503. After adding or rotating credentials, redeploy the project.
+Do not prefix these values with `NEXT_PUBLIC_`. If either Basic Auth value is missing, the Control Center fails closed with HTTP 503. The Supabase user ID maps the current Basic Auth login to one exact `profiles` row so server actions can enforce `owner`, `editor`, and `viewer` permissions. After adding or rotating credentials, redeploy the project.
 
 The application now uses the standard Next.js server deployment rather than `output: "export"`. Public pages remain statically generated where possible, while `/control-center` is dynamically served behind middleware. Phase 1 dashboard values are representative server-only data; Google Analytics Data API access, CMS editing, uploads, messaging, and other write operations are intentionally not implemented.
 

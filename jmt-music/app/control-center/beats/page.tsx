@@ -1,6 +1,8 @@
 import Image from "next/image";
-import { Calendar, Filter, KeyRound, Music2, Plus, Search, SlidersHorizontal } from "lucide-react";
-import { ActionButton, AdminCard, EmptyState, LoadingState, PageHeader } from "@/components/control-center/ui";
+import { Filter, Music2, Search, SlidersHorizontal } from "lucide-react";
+import { AddBeatDialog } from "@/components/control-center/add-beat-dialog";
+import { AdminCard, EmptyState, LoadingState, PageHeader } from "@/components/control-center/ui";
+import { getControlCenterRole } from "@/lib/control-center/access";
 import { getPropertyBeatLibrary } from "@/lib/control-center/beat-repository";
 import { getSiteConfig } from "@/lib/control-center/data";
 import type { SitePageProps } from "@/lib/control-center/types";
@@ -9,11 +11,15 @@ import type { SitePageProps } from "@/lib/control-center/types";
 export default async function BeatLibraryPage({ searchParams }: SitePageProps) {
   const { site: requestedSite } = await searchParams;
   const site = getSiteConfig(requestedSite);
-  const library = await getPropertyBeatLibrary(site);
+  const [library, role] = await Promise.all([
+    getPropertyBeatLibrary(site),
+    getControlCenterRole()
+  ]);
+  const canCreate = role === "owner" || role === "editor";
 
   return (
     <>
-      <PageHeader eyebrow={`${site.name} · Catalog`} title={site.catalogTitle} description={`${site.catalogDescription} Uploading and editing arrive in a later phase.`} actions={<ActionButton primary><Plus className="h-4 w-4" /> {site.id === "jmt-music" ? "Add Beat" : "Add Performance"}</ActionButton>} />
+      <PageHeader eyebrow={`${site.name} · Catalog`} title={site.catalogTitle} description={`${site.catalogDescription} Uploading and editing arrive in a later phase.`} actions={<AddBeatDialog propertyId={site.id} disabled={!canCreate || site.id !== "jmt-music"} />} />
       {site.supportMessage && <div className="mb-6 rounded-xl border border-amber-300/15 bg-amber-300/[0.055] px-4 py-3 text-xs text-amber-100/75">{site.supportMessage}</div>}
       <div className={`mb-6 flex items-center gap-2 rounded-xl border px-4 py-3 text-xs ${library.source === "supabase" ? "border-emerald-300/15 bg-emerald-300/[0.045] text-emerald-200" : "border-amber-300/15 bg-amber-300/[0.055] text-amber-200"}`}><span className={`h-2 w-2 rounded-full ${library.source === "supabase" ? "bg-emerald-400" : "bg-amber-400"}`} /><strong>{library.source === "supabase" ? "Live Supabase data" : "Mock fallback data"}</strong><span className="text-slate-500">· {library.detail}</span></div>
       <AdminCard className="mb-6 flex flex-col gap-3 p-3 md:flex-row">
