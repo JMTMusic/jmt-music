@@ -43,6 +43,17 @@ Do not prefix these values with `NEXT_PUBLIC_`. If either value is missing, the 
 
 The application now uses the standard Next.js server deployment rather than `output: "export"`. Public pages remain statically generated where possible, while `/control-center` is dynamically served behind middleware. Phase 1 dashboard values are representative server-only data; Google Analytics Data API access, CMS editing, uploads, messaging, and other write operations are intentionally not implemented.
 
+### Managed properties
+
+The Control Center is a multi-property administration hub. Its top-bar selector currently supports:
+
+- **JMT Music** — `jmtmusic.studio`, connected production property
+- **Jonathan Tripp** — `jonathan-tripp.com`, prepared for a future website and analytics connection
+
+The selected property is represented by the validated `site` query parameter and is preserved across sidebar navigation. Private mock and operational data are resolved on the server from `lib/control-center/data.ts`; the client-side switcher imports only the non-sensitive property registry from `lib/control-center/site-registry.ts`.
+
+To add another property, extend `SiteId` in `lib/control-center/types.ts`, add its public switcher entry to the registry, and provide one complete typed `SiteConfig`. Dashboard metrics, website sections, analytics health, channels, lead categories, brand settings, clients, activity, and catalog behavior will then flow through the existing pages without duplicating UI.
+
 ## Content
 
 `tracks.json` is the single source of truth for the portfolio, beat catalog, project pages, artwork, audio, metadata, and licensing URLs. Add a track there and the static project page is generated automatically.
