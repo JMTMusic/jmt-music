@@ -54,6 +54,18 @@ The selected property is represented by the validated `site` query parameter and
 
 To add another property, extend `SiteId` in `lib/control-center/types.ts`, add its public switcher entry to the registry, and provide one complete typed `SiteConfig`. Dashboard metrics, website sections, analytics health, channels, lead categories, brand settings, clients, activity, and catalog behavior will then flow through the existing pages without duplicating UI.
 
+### Supabase foundation
+
+Supabase client utilities are available for browser, server/RLS, and privileged server-only operations. Add these variables in Vercel:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+```
+
+The service-role key must remain server-only and must never use the `NEXT_PUBLIC_` prefix. The Control Center dashboard performs a public Auth health check using the anonymous key and shows the result under Website Status. No dashboard mock data is read from or written to Supabase in this phase.
+
 ## Content
 
 `tracks.json` is the single source of truth for the portfolio, beat catalog, project pages, artwork, audio, metadata, and licensing URLs. Add a track there and the static project page is generated automatically.

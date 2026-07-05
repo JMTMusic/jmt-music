@@ -18,6 +18,7 @@ import {
 import { ActionButton, AdminCard, PageHeader, SectionHeading, StatusRow } from "@/components/control-center/ui";
 import { getSiteConfig } from "@/lib/control-center/data";
 import type { Metric, SitePageProps } from "@/lib/control-center/types";
+import { getSupabaseHealth } from "@/lib/supabase/health";
 
 const metricIcons: Record<Metric["icon"], typeof Users> = {
   users: Users, activity: Activity, audio: AudioLines, click: MousePointerClick,
@@ -28,6 +29,7 @@ const metricIcons: Record<Metric["icon"], typeof Users> = {
 export default async function DashboardPage({ searchParams }: SitePageProps) {
   const { site: requestedSite } = await searchParams;
   const site = getSiteConfig(requestedSite);
+  const supabaseHealth = await getSupabaseHealth();
   const siteQuery = site.id === "jmt-music" ? "" : `?site=${site.id}`;
   const quickActions = [
     { label: site.id === "jmt-music" ? "Add Beat" : "Add Performance", icon: Plus, href: `/control-center/beats${siteQuery}` },
@@ -50,7 +52,7 @@ export default async function DashboardPage({ searchParams }: SitePageProps) {
 
       <div className="mt-10 grid gap-6 xl:grid-cols-[1.25fr_.75fr]">
         <AdminCard className="p-6"><SectionHeading title={site.id === "jmt-music" ? "Recent beats" : "Property focus"} description={site.catalog.length ? "Latest additions to the active catalog." : "Prepared capabilities for this property."} action={<a href={`/control-center/beats${siteQuery}`} className="text-xs font-semibold text-sky-300">View library</a>} />{site.catalog.length ? <div className="space-y-2">{site.catalog.slice(0, 4).map((beat) => <div key={beat.id} className="flex items-center gap-4 rounded-xl p-2 transition hover:bg-white/[0.035]"><Image src={beat.cover} alt="" width={52} height={52} className="rounded-lg" /><div className="min-w-0"><p className="truncate text-sm font-semibold">{beat.title}</p><p className="text-xs text-slate-500">{beat.genre} · {beat.bpm} BPM</p></div>{beat.featured && <span className="ml-auto rounded-full bg-sky-300/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-sky-300">Featured</span>}</div>)}</div> : <div className="rounded-xl border border-dashed border-white/10 p-8"><Music2 className="h-6 w-6 text-sky-300" /><p className="mt-4 text-sm font-medium">{site.focus}</p><p className="mt-2 text-xs leading-5 text-slate-500">Performance media and repertoire modules are prepared for a future connection.</p></div>}</AdminCard>
-        <AdminCard className="p-6"><SectionHeading title="Website status" description={`${site.name} service health.`} />{site.analyticsStatus.map((status) => <StatusRow key={status.label} {...status} />)}</AdminCard>
+        <AdminCard className="p-6"><SectionHeading title="Website status" description={`${site.name} service health.`} />{site.analyticsStatus.map((status) => <StatusRow key={status.label} {...status} />)}<StatusRow label="Supabase" detail={supabaseHealth.detail} healthy={supabaseHealth.connected} /></AdminCard>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
