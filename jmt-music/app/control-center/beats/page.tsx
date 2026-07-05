@@ -2,7 +2,7 @@ import Image from "next/image";
 import { Filter, Music2, Search, SlidersHorizontal } from "lucide-react";
 import { AddBeatDialog } from "@/components/control-center/add-beat-dialog";
 import { AdminCard, EmptyState, LoadingState, PageHeader } from "@/components/control-center/ui";
-import { getControlCenterRole } from "@/lib/control-center/access";
+import { getControlCenterAccessStatus } from "@/lib/control-center/access";
 import { getPropertyBeatLibrary } from "@/lib/control-center/beat-repository";
 import { getSiteConfig } from "@/lib/control-center/data";
 import type { SitePageProps } from "@/lib/control-center/types";
@@ -11,16 +11,16 @@ import type { SitePageProps } from "@/lib/control-center/types";
 export default async function BeatLibraryPage({ searchParams }: SitePageProps) {
   const { site: requestedSite } = await searchParams;
   const site = getSiteConfig(requestedSite);
-  const [library, role] = await Promise.all([
+  const [library, access] = await Promise.all([
     getPropertyBeatLibrary(site),
-    getControlCenterRole()
+    getControlCenterAccessStatus()
   ]);
-  const canCreate = role === "owner" || role === "editor";
 
   return (
     <>
-      <PageHeader eyebrow={`${site.name} · Catalog`} title={site.catalogTitle} description={`${site.catalogDescription} Uploading and editing arrive in a later phase.`} actions={<AddBeatDialog propertyId={site.id} disabled={!canCreate || site.id !== "jmt-music"} />} />
+      <PageHeader eyebrow={`${site.name} · Catalog`} title={site.catalogTitle} description={`${site.catalogDescription} Uploading and editing arrive in a later phase.`} actions={<AddBeatDialog propertyId={site.id} disabled={!access.canCreate || site.id !== "jmt-music"} />} />
       {site.supportMessage && <div className="mb-6 rounded-xl border border-amber-300/15 bg-amber-300/[0.055] px-4 py-3 text-xs text-amber-100/75">{site.supportMessage}</div>}
+      {!access.canCreate && site.id === "jmt-music" && <div className="mb-6 rounded-xl border border-amber-300/15 bg-amber-300/[0.055] px-4 py-3 text-xs text-amber-100/75"><strong className="mr-2 text-amber-200">Add Beat disabled:</strong>{access.detail}</div>}
       <div className={`mb-6 flex items-center gap-2 rounded-xl border px-4 py-3 text-xs ${library.source === "supabase" ? "border-emerald-300/15 bg-emerald-300/[0.045] text-emerald-200" : "border-amber-300/15 bg-amber-300/[0.055] text-amber-200"}`}><span className={`h-2 w-2 rounded-full ${library.source === "supabase" ? "bg-emerald-400" : "bg-amber-400"}`} /><strong>{library.source === "supabase" ? "Live Supabase data" : "Mock fallback data"}</strong><span className="text-slate-500">· {library.detail}</span></div>
       <AdminCard className="mb-6 flex flex-col gap-3 p-3 md:flex-row">
         <label className="flex min-h-11 flex-1 items-center gap-3 rounded-xl border border-white/8 bg-black/20 px-4 text-slate-500"><Search className="h-4 w-4" /><input className="w-full border-0 bg-transparent text-sm text-white outline-none placeholder:text-slate-600" placeholder="Search beats by title, genre, BPM, or key" disabled /></label>
