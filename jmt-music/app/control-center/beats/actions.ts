@@ -24,6 +24,7 @@ export type BeatMutationState = CreateBeatState;
 export type BeatRecordActionResult = {
   status: "error" | "success";
   message: string;
+  value?: boolean;
 };
 
 const initialState: CreateBeatState = { status: "idle", message: "" };
@@ -372,6 +373,61 @@ export async function duplicateBeat(input: {
     return { status: "error", message: "A unique copy slug could not be generated." };
   } catch {
     return { status: "error", message: "The beat could not be duplicated. Please try again." };
+  }
+}
+
+/** Toggles one supported status field on exactly one property-scoped beat. */
+export async function toggleBeatStatus(input: {
+  beatId: string;
+  property: string;
+  field: "published" | "featured";
+}): Promise<BeatRecordActionResult> {
+  if (input.field !== "published" && input.field !== "featured") {
+    return { status: "error", message: "That beat status field cannot be changed." };
+  }
+  if (!process.env.CONTROL_CENTER_SUPABASE_USER_ID) {
+    return { status: "error", message: "Control Center user mapping is not configured." };
+  }
+  const selectedSite = siteRegistry.find((site) => site.id === input.property);
+  if (!selectedSite) return { status: "error", message: "Select a valid property." };
+
+  try {
+    const role = await getControlCenterRole();
+    if (role !== "owner" && role !== "editor") {
+      return { status: "error", message: `You do not have permission to change beat ${input.field} status.` };
+    }
+    const supabase = createSupabaseAdminClient();
+    const { data: property, error: propertyError } = await supabase
+      .from("properties")
+      .select("id")
+      .eq("slug", selectedSite.id)
+      .maybeSingle();
+    if (propertyError || !property) return { status: "error", message: "The selected property could not be found." };
+
+    const { data: beat, error: beatError } = await supabase
+      .from("beats")
+      .select("id, published, featured")
+      .eq("id", input.beatId)
+      .eq("property_id", property.id)
+      .maybeSingle();
+    if (beatError || !beat) return { status: "error", message: "That beat does not belong to the selected property." };
+
+    const nextValue = !Boolean(input.field === "published" ? beat.published : beat.featured);
+    const { error } = await supabase
+      .from("beats")
+      .update({ [input.field]: nextValue, updated_at: new Date().toISOString() })
+      .eq("id", beat.id)
+      .eq("property_id", property.id);
+    if (error) return { status: "error", message: `The beat ${input.field} status could not be updated.` };
+
+    revalidatePath("/control-center/beats");
+    return {
+      status: "success",
+      message: `Beat ${input.field} status updated.`,
+      value: nextValue
+    };
+  } catch {
+    return { status: "error", message: `The beat ${input.field} status could not be updated.` };
   }
 }
 
