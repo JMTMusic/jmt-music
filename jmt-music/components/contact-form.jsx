@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AlertCircle, CheckCircle2, LoaderCircle, Send } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
 
 const FORM_ENDPOINT = "https://formsubmit.co/ajax/hello@jmtmusic.studio";
 const THANK_YOU_URL = "https://jmtmusic.studio/thank-you";
@@ -28,6 +29,11 @@ export function ContactForm() {
       });
 
       if (!response.ok) throw new Error("Form delivery failed");
+      const formData = new FormData(form);
+      trackEvent("contact_form_submit", {
+        project_type: formData.get("project"),
+        timeline: formData.get("timeline")
+      });
       setStatus("success");
       form.reset();
       window.location.assign(THANK_YOU_URL);

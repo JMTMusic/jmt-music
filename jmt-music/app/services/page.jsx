@@ -22,11 +22,11 @@ export default function ServicesPage() {
           <Reveal className="service-detail" key={title}>
             <div className="service-detail-number">0{index + 1}</div><Icon />
             <div><h2>{title}</h2><p>{description}</p><strong>{best}</strong></div>
-            <Link className="button button-secondary" href={`/contact?service=${encodeURIComponent(title)}`}>Start a project <ArrowRight /></Link>
+            <Link className="button button-secondary" href={`/contact?service=${encodeURIComponent(title)}`} data-analytics-event="service_cta_click" data-analytics-service={title}>Start a project <ArrowRight /></Link>
           </Reveal>
         ))}
       </div></section>
-      <section className="cta-band"><div className="site-width"><Reveal><p className="eyebrow">Not sure what you need?</p><h2>Send the song. We&apos;ll find the right next step.</h2><Link className="button button-primary" href="/contact">Talk to JMT Music <ArrowRight /></Link></Reveal></div></section>
+      <section className="cta-band"><div className="site-width"><Reveal><p className="eyebrow">Not sure what you need?</p><h2>Send the song. We&apos;ll find the right next step.</h2><Link className="button button-primary" href="/contact" data-analytics-event="service_cta_click" data-analytics-service="General inquiry">Talk to JMT Music <ArrowRight /></Link></Reveal></div></section>
     </>
   );
 }

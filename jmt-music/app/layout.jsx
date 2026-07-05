@@ -1,4 +1,6 @@
 import "./globals.css";
+import { GoogleAnalytics } from "@next/third-parties/google";
+import { AnalyticsClickTracker, MicrosoftClarity } from "@/components/analytics";
 import { SiteShell } from "@/components/site-shell";
 
 export const metadata = {
@@ -16,9 +18,17 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+  const gaId = process.env.NEXT_PUBLIC_GA_ID;
+  const clarityId = process.env.NEXT_PUBLIC_CLARITY_ID;
+
   return (
     <html lang="en">
-      <body><SiteShell>{children}</SiteShell></body>
+      <body>
+        <SiteShell>{children}</SiteShell>
+        {(gaId || clarityId) && <AnalyticsClickTracker />}
+        {gaId && <GoogleAnalytics gaId={gaId} />}
+        {clarityId && <MicrosoftClarity projectId={clarityId} />}
+      </body>
     </html>
   );
 }

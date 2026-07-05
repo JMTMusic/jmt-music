@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 
 const AudioContext = createContext(null);
 const STORAGE_KEY = "jmt-global-player";
@@ -81,6 +82,10 @@ export function AudioProvider({ children }) {
         try {
           await audio.play();
           setPlaying(true);
+          trackEvent("beat_audio_play", {
+            beat_title: track.title,
+            beat_slug: track.slug
+          });
         } catch {
           setPlaying(false);
         }
@@ -96,6 +101,10 @@ export function AudioProvider({ children }) {
     try {
       await audio.play();
       setPlaying(true);
+      trackEvent("beat_audio_play", {
+        beat_title: track.title,
+        beat_slug: track.slug
+      });
     } catch {
       setPlaying(false);
     }

@@ -65,6 +65,10 @@ export function GlobalPlayer() {
         className="player-license"
         href={activeTrack.beatstarsUrl || "/contact"}
         aria-label="License or inquire"
+        {...(activeTrack.beatstarsUrl ? {
+          "data-analytics-event": "beatstars_link_click",
+          "data-analytics-label": activeTrack.title
+        } : {})}
         {...(activeTrack.beatstarsUrl ? { target: "_blank", rel: "noopener noreferrer" } : {})}
       >
         {activeTrack.beatstarsUrl ? <ShoppingBag /> : <span>Inquire</span>}

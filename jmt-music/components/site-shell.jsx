@@ -54,7 +54,7 @@ export function SiteShell({ children }) {
             <div>
               <h2>Connect</h2>
               <a href={externalLinks.instagram} target="_blank" rel="noopener noreferrer" aria-label="JMT Music on Instagram">Instagram</a>
-              <a href={externalLinks.beatstars} target="_blank" rel="noopener noreferrer" aria-label="JMT Music on BeatStars">BeatStars</a>
+              <a href={externalLinks.beatstars} target="_blank" rel="noopener noreferrer" aria-label="JMT Music on BeatStars" data-analytics-event="beatstars_link_click" data-analytics-label="Footer">BeatStars</a>
               <a href={externalLinks.fiverr} target="_blank" rel="noopener noreferrer" aria-label="JMT Music on Fiverr">Fiverr</a>
             </div>
           </div>

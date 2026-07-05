@@ -9,7 +9,7 @@ export default function ContactPage() {
   return (
     <section className="contact-page">
       <div className="site-width contact-layout">
-        <Reveal className="contact-intro"><p className="eyebrow">Start a project</p><h1>Tell me what you&apos;re making.</h1><p>Share the vision, the timeline, and where the project is right now. You&apos;ll hear back with a clear next step.</p><div className="contact-links"><a href="mailto:hello@jmtmusic.studio"><Mail /> hello@jmtmusic.studio</a><a href={externalLinks.instagram} target="_blank" rel="noopener noreferrer"><Instagram /> Instagram</a><a href={externalLinks.beatstars} target="_blank" rel="noopener noreferrer"><Music2 /> BeatStars</a></div></Reveal>
+        <Reveal className="contact-intro"><p className="eyebrow">Start a project</p><h1>Tell me what you&apos;re making.</h1><p>Share the vision, the timeline, and where the project is right now. You&apos;ll hear back with a clear next step.</p><div className="contact-links"><a href="mailto:hello@jmtmusic.studio"><Mail /> hello@jmtmusic.studio</a><a href={externalLinks.instagram} target="_blank" rel="noopener noreferrer"><Instagram /> Instagram</a><a href={externalLinks.beatstars} target="_blank" rel="noopener noreferrer" data-analytics-event="beatstars_link_click" data-analytics-label="Contact page"><Music2 /> BeatStars</a></div></Reveal>
         <Reveal><ContactForm /></Reveal>
       </div>
     </section>
