@@ -2,6 +2,7 @@ import "./globals.css";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { AnalyticsClickTracker, MicrosoftClarity } from "@/components/analytics";
 import { SiteShell } from "@/components/site-shell";
+import { getPublishedSection } from "@/lib/public-cms";
 
 export const metadata = {
   metadataBase: new URL("https://jmtmusic.studio"),
@@ -17,14 +18,15 @@ export const metadata = {
   }
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
   const gaId = process.env.NEXT_PUBLIC_GA_ID;
   const clarityId = process.env.NEXT_PUBLIC_CLARITY_ID;
+  const footerCms = await getPublishedSection("footer");
 
   return (
     <html lang="en">
       <body>
-        <SiteShell>{children}</SiteShell>
+        <SiteShell footerCms={footerCms}>{children}</SiteShell>
         {(gaId || clarityId) && <AnalyticsClickTracker />}
         {gaId && <GoogleAnalytics gaId={gaId} />}
         {clarityId && <MicrosoftClarity projectId={clarityId} />}

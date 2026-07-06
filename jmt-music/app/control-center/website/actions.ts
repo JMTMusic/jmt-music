@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { getControlCenterRole } from "@/lib/control-center/access";
 import { siteRegistry } from "@/lib/control-center/site-registry";
 import {
@@ -12,6 +12,7 @@ import {
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { BEAT_ARTWORK_MIME_TYPES, ensureWebsiteMediaBucket, WEBSITE_MEDIA_BUCKET, WEBSITE_MEDIA_MAX_BYTES } from "@/lib/supabase/storage";
 import { CURRENT_JMT_SITE_SECTIONS } from "@/lib/control-center/current-site-sections";
+import { PUBLIC_CMS_TAG } from "@/lib/public-cms";
 
 export type WebsiteActionResult = {
   status: "error" | "success";
@@ -248,6 +249,10 @@ export async function mutateWebsiteSection(input: {
       const { published_snapshot: _previous, ...draft } = content;
       const { error } = await supabase.from("website_sections").update({ content: { ...content, published_snapshot: draft }, published: true }).eq("id", section.id).eq("property_id", property.id);
       if (error) return { status: "error", message: "The section could not be published." };
+      revalidateTag(PUBLIC_CMS_TAG);
+      const publicPath: Record<string, string> = { home: "/", beats: "/beats", services: "/services", sync: "/sync", contact: "/contact", global: "/" };
+      if (content.page_key === "global") ["/", "/beats", "/services", "/sync", "/contact"].forEach((path) => revalidatePath(path));
+      else revalidatePath(publicPath[content.page_key || "home"] || "/");
     } else if (input.mutation === "duplicate" || input.mutation === "add-below") {
       const duplicate = input.mutation === "duplicate";
       let inserted = false;
@@ -288,7 +293,7 @@ export async function mutateWebsiteSection(input: {
       }
     }
     revalidatePath("/control-center/website");
-    return { status: "success", message: input.mutation === "publish" ? "Section published to the staged snapshot." : "Section updated." };
+    return { status: "success", message: input.mutation === "publish" ? "Section published to the website." : "Section updated." };
   } catch {
     return { status: "error", message: "The section action could not be completed." };
   }

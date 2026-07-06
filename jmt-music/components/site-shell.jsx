@@ -17,7 +17,7 @@ const navigation = [
   ["Contact", "/contact"]
 ];
 
-export function SiteShell({ children }) {
+export function SiteShell({ children, footerCms }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -46,14 +46,14 @@ export function SiteShell({ children }) {
         </div>
       </header>
       <main>{children}</main>
-      <footer className="site-footer">
+      {!footerCms?.hidden && <footer className="site-footer">
         <div className="site-width">
           <div className="footer-lead">
-            <p>Let&apos;s make something unforgettable.</p>
-            <Link className="button button-primary" href="/contact">Start a Project</Link>
+            <p>{footerCms?.heading ?? "Let's make something unforgettable."}</p>
+            <Link className="button button-primary" href={footerCms?.primary_cta_url ?? "/contact"}>{footerCms?.primary_cta_label ?? "Start a Project"}</Link>
           </div>
           <div className="footer-grid">
-            <div><span className="brand-mark">JMT</span><p>Production, mixing, mastering, and original music by Jonathan Tripp.</p></div>
+            <div><span className="brand-mark">JMT</span><p>{footerCms?.body ?? "Production, mixing, mastering, and original music by Jonathan Tripp."}</p></div>
             <div><h2>Navigate</h2>{navigation.map(([label, href]) => <Link key={href} href={href}>{label}</Link>)}</div>
             <div>
               <h2>Connect</h2>
@@ -64,7 +64,7 @@ export function SiteShell({ children }) {
           </div>
           <div className="footer-bottom"><span>© {new Date().getFullYear()} JMT Music</span><span>JMTMusic.studio</span></div>
         </div>
-      </footer>
+      </footer>}
       <GlobalPlayer />
     </AudioProvider>
   );

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, AudioLines, Clapperboard, Gauge, KeyboardMusic, Music2, SlidersHorizontal } from "lucide-react";
 import { Reveal } from "@/components/motion";
+import { getPublishedSection } from "@/lib/public-cms";
 
 const services = [
   [Music2, "Custom Music Production", "From a voice memo or rough demo to a fully arranged record. Production includes creative direction, instrumentation, programming, arrangement, and the details that make a song feel complete.", "Best for artists who need a record built around their song."],
@@ -13,11 +14,16 @@ const services = [
 
 export const metadata = { title: "Production Services", description: "Custom production, mixing, mastering, piano recording, beat licensing, and sync licensing from JMT Music." };
 
-export default function ServicesPage() {
+export default async function ServicesPage() {
+  const [hero, servicesCms, cta] = await Promise.all([
+    getPublishedSection("services"),
+    getPublishedSection("services-list"),
+    getPublishedSection("services-cta")
+  ]);
   return (
     <>
-      <section className="page-hero"><div className="site-width"><Reveal><p className="eyebrow">Services</p><h1>One creative partner.<br />A complete sound.</h1><p>Choose the support your project needs, from a single keyboard performance to full production and final master.</p></Reveal></div></section>
-      <section className="section"><div className="site-width service-detail-list">
+      {!hero?.hidden && <section className="page-hero"><div className="site-width"><Reveal><p className="eyebrow">{hero?.eyebrow ?? "Services"}</p><h1>{hero?.heading ?? <>One creative partner.<br />A complete sound.</>}</h1><p>{hero?.body ?? "Choose the support your project needs, from a single keyboard performance to full production and final master."}</p></Reveal></div></section>}
+      {!servicesCms?.hidden && <section className="section"><div className="site-width service-detail-list">
         {services.map(([Icon, title, description, best], index) => (
           <Reveal className="service-detail" key={title}>
             <div className="service-detail-number">0{index + 1}</div><Icon />
@@ -25,8 +31,8 @@ export default function ServicesPage() {
             <Link className="button button-secondary" href={`/contact?service=${encodeURIComponent(title)}`} data-analytics-event="service_cta_click" data-analytics-service={title}>Start a project <ArrowRight /></Link>
           </Reveal>
         ))}
-      </div></section>
-      <section className="cta-band"><div className="site-width"><Reveal><p className="eyebrow">Not sure what you need?</p><h2>Send the song. We&apos;ll find the right next step.</h2><Link className="button button-primary" href="/contact" data-analytics-event="service_cta_click" data-analytics-service="General inquiry">Talk to JMT Music <ArrowRight /></Link></Reveal></div></section>
+      </div></section>}
+      {!cta?.hidden && <section className="cta-band"><div className="site-width"><Reveal><p className="eyebrow">{cta?.eyebrow ?? "Not sure what you need?"}</p><h2>{cta?.heading ?? "Send the song. We'll find the right next step."}</h2><Link className="button button-primary" href={cta?.primary_cta_url ?? "/contact"} data-analytics-event="service_cta_click" data-analytics-service="General inquiry">{cta?.primary_cta_label ?? "Talk to JMT Music"} <ArrowRight /></Link></Reveal></div></section>}
     </>
   );
 }
