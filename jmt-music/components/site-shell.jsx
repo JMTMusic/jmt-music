@@ -68,13 +68,14 @@ export function SiteShell({ children, footerCms, extraGlobalSections = [] }) {
         <div className="site-width">
           <div className="footer-lead">
             <p>{footerCms?.heading ?? "Let's make something unforgettable."}</p>
-            <Link className="button button-primary" href={footerCms?.primary_cta_url ?? "/contact"}>{footerCms?.primary_cta_label ?? "Start a Project"}</Link>
+            <Link className="button button-primary" href={footerCms?.primary_cta_url ?? "/contact"}>{footerCms?.primary_cta_label ?? "Start Your Project"}</Link>
           </div>
           <div className="footer-grid">
-            <div><span className="brand-mark">JMT</span><p>{footerCms?.body ?? "Production, mixing, mastering, and original music by Jonathan Tripp."}</p></div>
+            <div><span className="brand-mark">JMT</span><p>{footerCms?.body ?? "Music production, beat licensing, mixing, session keys, and sync music by Jonathan Tripp."}</p></div>
             <div><h2>Navigate</h2>{navigation.map(([label, href]) => <Link key={href} href={href}>{label}</Link>)}</div>
             <div>
               <h2>Connect</h2>
+              <a href="mailto:hello@jmtmusic.studio">Email</a>
               <a href={externalLinks.instagram} target="_blank" rel="noopener noreferrer" aria-label="JMT Music on Instagram">Instagram</a>
               <a href={externalLinks.beatstars} target="_blank" rel="noopener noreferrer" aria-label="JMT Music on BeatStars" data-analytics-event="beatstars_link_click" data-analytics-label="Footer">BeatStars</a>
             </div>

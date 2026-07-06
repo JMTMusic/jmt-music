@@ -10,10 +10,10 @@ export const metadata = {
     default: "JMT Music | Music Production, Mixing & Mastering",
     template: "%s | JMT Music"
   },
-  description: "Professional music production, mixing, mastering, custom instrumentals, and piano composition by JMT Music.",
+  description: "Thoughtful music production, beat licensing, mixing, session keys, and sync music created with craftsmanship and genuine care.",
   openGraph: {
     title: "JMT Music",
-    description: "Music that sounds finished.",
+    description: "Thoughtful music production, beat licensing, mixing, session keys, and sync music created with craftsmanship and genuine care.",
     images: ["/assets/jmt-studio-hero.png"]
   }
 };
