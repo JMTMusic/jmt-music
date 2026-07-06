@@ -1,10 +1,12 @@
 import { BeatsPageContent } from "@/components/beats-page-content";
-import { getPublishedSection } from "@/lib/public-cms";
+import { getPublishedPageSections, getPublishedSection } from "@/lib/public-cms";
 
 export default async function BeatsPage() {
-  const [hero, catalog] = await Promise.all([
+  const [hero, catalog, sections] = await Promise.all([
     getPublishedSection("beats-hero"),
-    getPublishedSection("beats-library")
+    getPublishedSection("beats-library"),
+    getPublishedPageSections("beats")
   ]);
-  return <BeatsPageContent hero={hero} catalog={catalog} />;
+  const extras = sections.filter((section) => !["beats-hero", "beats-library"].includes(section.sectionKey));
+  return <BeatsPageContent hero={hero} catalog={catalog} extraSections={extras} />;
 }
