@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { AudioProvider } from "./audio-provider";
 import { GlobalPlayer } from "./track-ui";
@@ -11,16 +11,33 @@ import { PublicCmsSections } from "@/components/public-cms-sections";
 
 const navigation = [
   ["Home", "/"],
-  ["Services", "/services"],
-  ["Portfolio", "/portfolio"],
   ["Beats", "/beats"],
-  ["About", "/about"],
+  ["Services", "/services"],
+  ["Sync", "/sync"],
   ["Contact", "/contact"]
 ];
 
 export function SiteShell({ children, footerCms, extraGlobalSections = [] }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    document.body.classList.toggle("nav-open", open);
+
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.classList.remove("nav-open");
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
 
   if (pathname.startsWith("/control-center")) {
     return children;
@@ -60,7 +77,6 @@ export function SiteShell({ children, footerCms, extraGlobalSections = [] }) {
               <h2>Connect</h2>
               <a href={externalLinks.instagram} target="_blank" rel="noopener noreferrer" aria-label="JMT Music on Instagram">Instagram</a>
               <a href={externalLinks.beatstars} target="_blank" rel="noopener noreferrer" aria-label="JMT Music on BeatStars" data-analytics-event="beatstars_link_click" data-analytics-label="Footer">BeatStars</a>
-              <a href={externalLinks.fiverr} target="_blank" rel="noopener noreferrer" aria-label="JMT Music on Fiverr">Fiverr</a>
             </div>
           </div>
           <div className="footer-bottom"><span>© {new Date().getFullYear()} JMT Music</span><span>JMTMusic.studio</span></div>
