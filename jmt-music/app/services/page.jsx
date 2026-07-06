@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, AudioLines, Clapperboard, Gauge, KeyboardMusic, Music2, SlidersHorizontal } from "lucide-react";
 import { Reveal } from "@/components/motion";
-import { getPublishedSection } from "@/lib/public-cms";
+import { getPublishedPageSections, getPublishedSection } from "@/lib/public-cms";
+import { PublicCmsSections } from "@/components/public-cms-sections";
 
 const services = [
   [Music2, "Custom Music Production", "From a voice memo or rough demo to a fully arranged record. Production includes creative direction, instrumentation, programming, arrangement, and the details that make a song feel complete.", "Best for artists who need a record built around their song."],
@@ -15,11 +16,13 @@ const services = [
 export const metadata = { title: "Production Services", description: "Custom production, mixing, mastering, piano recording, beat licensing, and sync licensing from JMT Music." };
 
 export default async function ServicesPage() {
-  const [hero, servicesCms, cta] = await Promise.all([
+  const [hero, servicesCms, cta, publishedSections] = await Promise.all([
     getPublishedSection("services"),
     getPublishedSection("services-list"),
-    getPublishedSection("services-cta")
+    getPublishedSection("services-cta"),
+    getPublishedPageSections("services")
   ]);
+  const extraSections = publishedSections.filter((section) => !["services", "services-list", "services-cta"].includes(section.sectionKey));
   return (
     <>
       {!hero?.hidden && <section className="page-hero"><div className="site-width"><Reveal><p className="eyebrow">{hero?.eyebrow ?? "Services"}</p><h1>{hero?.heading ?? <>One creative partner.<br />A complete sound.</>}</h1><p>{hero?.body ?? "Choose the support your project needs, from a single keyboard performance to full production and final master."}</p></Reveal></div></section>}
@@ -33,6 +36,7 @@ export default async function ServicesPage() {
         ))}
       </div></section>}
       {!cta?.hidden && <section className="cta-band"><div className="site-width"><Reveal><p className="eyebrow">{cta?.eyebrow ?? "Not sure what you need?"}</p><h2>{cta?.heading ?? "Send the song. We'll find the right next step."}</h2><Link className="button button-primary" href={cta?.primary_cta_url ?? "/contact"} data-analytics-event="service_cta_click" data-analytics-service="General inquiry">{cta?.primary_cta_label ?? "Talk to JMT Music"} <ArrowRight /></Link></Reveal></div></section>}
+      <PublicCmsSections sections={extraSections} />
     </>
   );
 }

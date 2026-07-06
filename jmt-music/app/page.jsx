@@ -13,6 +13,8 @@ import { FloatingArtwork, Reveal } from "@/components/motion";
 import { TrackCard } from "@/components/track-ui";
 import { tracks } from "@/lib/tracks";
 import { getPublishedSection } from "@/lib/public-cms";
+import { getPublishedPageSections } from "@/lib/public-cms";
+import { PublicCmsSections } from "@/components/public-cms-sections";
 
 const services = [
   [Music2, "Music Production", "Intentional, artist-centered production from the first idea through a polished arrangement."],
@@ -29,13 +31,15 @@ const strengths = [
 ];
 
 export default async function Home() {
-  const [hero, servicesCms, featured, philosophy, finalCta] = await Promise.all([
+  const [hero, servicesCms, featured, philosophy, finalCta, publishedSections] = await Promise.all([
     getPublishedSection("homepage-hero"),
     getPublishedSection("home-services"),
     getPublishedSection("home-featured-work"),
     getPublishedSection("about"),
-    getPublishedSection("home-final-cta")
+    getPublishedSection("home-final-cta"),
+    getPublishedPageSections("home")
   ]);
+  const extraSections = publishedSections.filter((section) => !["homepage-hero", "home-services", "home-featured-work", "about", "home-final-cta"].includes(section.sectionKey));
   return (
     <>
       {!hero?.hidden && <section className="hero production-hero">
@@ -125,6 +129,7 @@ export default async function Home() {
           </Reveal>
         </div>
       </section>}
+      <PublicCmsSections sections={extraSections} />
     </>
   );
 }

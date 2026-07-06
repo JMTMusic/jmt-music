@@ -31,7 +31,7 @@ const readPublishedSections = unstable_cache(async (): Promise<PublishedCmsSecti
       const imageUrl = typeof snapshot.image_path === "string"
         ? supabase.storage.from("website-media").getPublicUrl(snapshot.image_path).data.publicUrl
         : null;
-      return [{ sectionKey: row.section_key, sortOrder: row.sort_order, content: { ...snapshot, image_url: imageUrl } }];
+      return [{ sectionKey: row.section_key, sortOrder: typeof snapshot.published_sort_order === "number" ? snapshot.published_sort_order : row.sort_order, content: { ...snapshot, hidden: Boolean(snapshot.hidden || snapshot.deleted), image_url: imageUrl } }];
     }).sort((a, b) => a.sortOrder - b.sortOrder);
   } catch {
     return [];

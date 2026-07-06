@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, Clapperboard, FileCheck2, Music2 } from "lucide-react";
 import { Reveal } from "@/components/motion";
-import { getPublishedSection } from "@/lib/public-cms";
+import { getPublishedPageSections, getPublishedSection } from "@/lib/public-cms";
+import { PublicCmsSections } from "@/components/public-cms-sections";
 
 export const metadata = {
   title: "Sync Licensing",
@@ -9,11 +10,13 @@ export const metadata = {
 };
 
 export default async function SyncPage() {
-  const [hero, details, cta] = await Promise.all([
+  const [hero, details, cta, publishedSections] = await Promise.all([
     getPublishedSection("sync-hero"),
     getPublishedSection("sync-details"),
-    getPublishedSection("sync-cta")
+    getPublishedSection("sync-cta"),
+    getPublishedPageSections("sync")
   ]);
+  const extraSections = publishedSections.filter((section) => !["sync-hero", "sync-details", "sync-cta"].includes(section.sectionKey));
   return (
     <>
       {!hero?.hidden && <section className="page-hero about-page-hero">
@@ -37,6 +40,7 @@ export default async function SyncPage() {
           <Reveal><p className="eyebrow">{cta?.eyebrow ?? "Start a sync inquiry"}</p><h2>{cta?.heading ?? "Tell me about the picture and the feeling."}</h2><Link className="button button-primary" href={cta?.primary_cta_url ?? "/contact"}>{cta?.primary_cta_label ?? "Discuss your project"} <ArrowRight /></Link></Reveal>
         </div>
       </section>}
+      <PublicCmsSections sections={extraSections} />
     </>
   );
 }

@@ -7,6 +7,7 @@ import { Menu, X } from "lucide-react";
 import { AudioProvider } from "./audio-provider";
 import { GlobalPlayer } from "./track-ui";
 import { externalLinks } from "@/lib/site-links";
+import { PublicCmsSections } from "@/components/public-cms-sections";
 
 const navigation = [
   ["Home", "/"],
@@ -17,7 +18,7 @@ const navigation = [
   ["Contact", "/contact"]
 ];
 
-export function SiteShell({ children, footerCms }) {
+export function SiteShell({ children, footerCms, extraGlobalSections = [] }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -65,6 +66,7 @@ export function SiteShell({ children, footerCms }) {
           <div className="footer-bottom"><span>© {new Date().getFullYear()} JMT Music</span><span>JMTMusic.studio</span></div>
         </div>
       </footer>}
+      <PublicCmsSections sections={extraGlobalSections} />
       <GlobalPlayer />
     </AudioProvider>
   );

@@ -240,14 +240,17 @@ export async function mutateWebsiteSection(input: {
     const content = (section.content as WebsiteSectionContent | null) || {};
 
     if (input.mutation === "delete") {
-      const { error } = await supabase.from("website_sections").delete().eq("id", section.id).eq("property_id", property.id);
-      if (error) return { status: "error", message: "The section could not be deleted." };
+      const result = section.published
+        ? await supabase.from("website_sections").update({ content: { ...content, hidden: true, deleted: true } }).eq("id", section.id).eq("property_id", property.id)
+        : await supabase.from("website_sections").delete().eq("id", section.id).eq("property_id", property.id);
+      if (result.error) return { status: "error", message: "The section could not be deleted." };
     } else if (input.mutation === "toggle-hidden") {
-      const { error } = await supabase.from("website_sections").update({ content: { ...content, hidden: !content.hidden } }).eq("id", section.id).eq("property_id", property.id);
+      const nextHidden = !content.hidden;
+      const { error } = await supabase.from("website_sections").update({ content: { ...content, hidden: nextHidden, deleted: nextHidden ? content.deleted : false } }).eq("id", section.id).eq("property_id", property.id);
       if (error) return { status: "error", message: "Section visibility could not be changed." };
     } else if (input.mutation === "publish") {
       const { published_snapshot: _previous, ...draft } = content;
-      const { error } = await supabase.from("website_sections").update({ content: { ...content, published_snapshot: draft }, published: true }).eq("id", section.id).eq("property_id", property.id);
+      const { error } = await supabase.from("website_sections").update({ content: { ...content, published_snapshot: { ...draft, published_sort_order: section.sort_order } }, published: true }).eq("id", section.id).eq("property_id", property.id);
       if (error) return { status: "error", message: "The section could not be published." };
       revalidateTag(PUBLIC_CMS_TAG);
       const publicPath: Record<string, string> = { home: "/", beats: "/beats", services: "/services", sync: "/sync", contact: "/contact", global: "/" };
@@ -293,7 +296,8 @@ export async function mutateWebsiteSection(input: {
       }
     }
     revalidatePath("/control-center/website");
-    return { status: "success", message: input.mutation === "publish" ? "Section published to the website." : "Section updated." };
+    const message = input.mutation === "publish" ? "Section published to the website." : input.mutation === "delete" && section.published ? "Section marked for removal. Publish the page to remove it from the website." : "Section updated.";
+    return { status: "success", message };
   } catch {
     return { status: "error", message: "The section action could not be completed." };
   }

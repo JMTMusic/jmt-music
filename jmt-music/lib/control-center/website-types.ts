@@ -20,6 +20,8 @@ export type WebsiteSectionContent = {
   page_key?: WebsitePageKey;
   section_type?: "hero" | "text" | "image" | "gallery" | "beat-grid" | "services" | "cta" | "contact" | "testimonials";
   hidden?: boolean;
+  deleted?: boolean;
+  published_sort_order?: number;
   image_path?: string | null;
   image_position?: { x: number; y: number };
   published_snapshot?: Omit<WebsiteSectionContent, "published_snapshot">;
