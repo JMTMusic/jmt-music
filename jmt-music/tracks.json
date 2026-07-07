@@ -1,6 +1,30 @@
 {
   "tracks": [
     {
+      "title": "Cloud Nine",
+      "slug": "cloud-nine",
+      "genre": "chill",
+      "subgenre": "Pop Hip Hop / Chill Hip Hop",
+      "mood": "Feel Good, Uplifting, Bright, Summer, Carefree, Confident, Positive, Relaxed",
+      "bpm": null,
+      "key": null,
+      "coverImage": "/assets/covers/cloud-nine.png",
+      "audioUrl": "/audio/cloud-nine.mp3",
+      "shortDescription": "Clean melodic hip hop with bright guitars, uplifting melodies, and feel-good summer energy.",
+      "description": "A bright, melodic hip-hop instrumental featuring clean guitars, uplifting melodies, crisp drums, warm 808s, and polished production. Cloud Nine blends pop sensibilities with modern hip-hop energy, making it perfect for artists looking to create feel-good, memorable records.",
+      "productionRole": "Production, arrangement, mix",
+      "productionNotes": "Clean guitars, uplifting melodic layers, crisp drums, warm 808s, and polished pop hip hop structure keep the track bright, confident, and artist-ready.",
+      "beatstarsUrl": null,
+      "releaseDate": "2026-07-07",
+      "featured": true,
+      "primaryGenre": "Hip Hop",
+      "secondaryGenre": "Pop",
+      "energy": "Medium",
+      "emotion": "Optimistic",
+      "instruments": ["Electric Guitar", "Synth", "808", "Drums", "Bass"],
+      "tags": ["Melodic Hip Hop", "Pop Hip Hop", "Chill Hip Hop", "Feel Good", "Uplifting", "Bright", "Summer", "Carefree", "Confident", "Positive", "Relaxed", "Electric Guitar", "Synth", "808", "Drums", "Bass", "Pop Rap", "Guitar Beat", "Summer Beat", "Jack Harlow", "Drake", "Post Malone", "Don Toliver", "Melodic", "Clean", "Radio Ready", "Sunny", "Catchy"]
+    },
+    {
       "title": "Swagger",
       "slug": "swagger",
       "genre": "chill",

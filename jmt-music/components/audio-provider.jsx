@@ -76,6 +76,7 @@ export function AudioProvider({ children }) {
   }, [activeTrack, currentTime, playing, volume]);
 
   const toggle = async (track) => {
+    if (!track?.audioUrl) return;
     const audio = audioRef.current;
     if (activeTrack?.slug === track.slug) {
       if (audio.paused) {

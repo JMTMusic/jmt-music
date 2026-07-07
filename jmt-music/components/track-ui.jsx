@@ -14,16 +14,18 @@ function formatTime(value) {
 export function PlayButton({ track, compact = false, label = "Play track" }) {
   const { activeTrack, playing, toggle } = useAudio();
   const active = activeTrack?.slug === track.slug && playing;
+  const hasAudio = Boolean(track.audioUrl);
   return (
-    <button className={compact ? "play-button compact" : "play-button"} onClick={() => toggle(track)} aria-label={`${active ? "Pause" : "Play"} ${track.title}`}>
+    <button className={compact ? "play-button compact" : "play-button"} onClick={() => toggle(track)} aria-label={`${active ? "Pause" : "Play"} ${track.title}`} disabled={!hasAudio}>
       {active ? <Pause fill="currentColor" /> : <Play fill="currentColor" />}
-      {!compact && <span>{active ? "Pause" : label}</span>}
+      {!compact && <span>{hasAudio ? (active ? "Pause" : label) : "Preview unavailable"}</span>}
     </button>
   );
 }
 
 export function TrackCard({ track, portfolio = false, catalog = false }) {
   const className = portfolio ? "project-card" : catalog ? "track-card catalog-track-card" : "track-card";
+  const catalogMeta = [getGenreName(track.genre), track.mood, track.bpm ? `${track.bpm} BPM` : null].filter(Boolean);
   return (
     <article className={className}>
       <div className="track-art">
@@ -34,8 +36,8 @@ export function TrackCard({ track, portfolio = false, catalog = false }) {
       </div>
       <div className="track-card-copy">
         {catalog
-          ? <div className="catalog-track-meta"><span>{getGenreName(track.genre)}</span><span>{track.mood}</span><span>{track.bpm} BPM</span></div>
-          : <div className="track-card-top"><span>{track.genre.replace("-", " ")}</span><span>{track.bpm} BPM</span></div>}
+          ? <div className="catalog-track-meta">{catalogMeta.map((item) => <span key={item}>{item}</span>)}</div>
+          : <div className="track-card-top"><span>{track.genre.replace("-", " ")}</span>{track.bpm ? <span>{track.bpm} BPM</span> : null}</div>}
         <h3>{catalog ? track.title : <Link href={`/projects/${track.slug}`}>{track.title}</Link>}</h3>
         <p>{track.shortDescription}</p>
         {portfolio && <strong>{track.productionRole}</strong>}

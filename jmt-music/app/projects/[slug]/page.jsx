@@ -10,22 +10,30 @@ export function generateStaticParams() {
   return tracks.map((track) => ({ slug: track.slug }));
 }
 
-export function generateMetadata({ params }) {
-  const track = getTrack(params.slug);
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const track = getTrack(slug);
   return track ? { title: track.title, description: track.description, openGraph: { images: [track.coverImage] } } : {};
 }
 
-export default function ProjectPage({ params }) {
-  const track = getTrack(params.slug);
+export default async function ProjectPage({ params }) {
+  const { slug } = await params;
+  const track = getTrack(slug);
   if (!track) notFound();
   const similar = getSimilarTracks(track);
+  const details = [
+    ["BPM", track.bpm],
+    ["Key", track.key],
+    ["Mood", track.mood],
+    ["Role", track.productionRole]
+  ].filter(([, value]) => value);
   return (
     <>
       <section className="project-hero"><div className="site-width">
         <Link className="back-link" href="/portfolio"><ArrowLeft /> Portfolio</Link>
         <div className="project-hero-grid">
           <Reveal className="project-art-large"><Image src={track.coverImage} alt={`${track.title} artwork`} width={900} height={900} priority /></Reveal>
-          <Reveal className="project-copy"><p className="eyebrow">{getGenreName(track.genre)} · {track.mood}</p><h1>{track.title}</h1><p className="project-description">{track.description}</p><div className="project-player"><PlayButton track={track} /><span>Full preview</span></div><dl><div><dt>BPM</dt><dd>{track.bpm}</dd></div><div><dt>Key</dt><dd>{track.key}</dd></div><div><dt>Mood</dt><dd>{track.mood}</dd></div><div><dt>Role</dt><dd>{track.productionRole}</dd></div></dl></Reveal>
+          <Reveal className="project-copy"><p className="eyebrow">{getGenreName(track.genre)} · {track.mood}</p><h1>{track.title}</h1><p className="project-description">{track.description}</p><div className="project-player"><PlayButton track={track} /><span>{track.audioUrl ? "Full preview" : "Preview unavailable"}</span></div><dl>{details.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl></Reveal>
         </div>
       </div></section>
       <section className="section production-notes"><div className="site-width narrow"><Reveal><p className="eyebrow">Production notes</p><h2>The choices behind the record.</h2><p>{track.productionNotes}</p><div className="tag-row">{track.tags.map((tag) => <span key={tag}>{tag}</span>)}</div></Reveal></div></section>
