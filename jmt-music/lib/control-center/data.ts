@@ -56,13 +56,6 @@ export const siteConfigs: Record<SiteId, SiteConfig> = {
       { label: "Accent", value: "Baby blue" },
       { label: "Voice", value: "Premium, direct, creative" }
     ],
-    clients: [
-      { id: "c1", name: "Maya Reynolds", email: "maya@example.com", project: "Production · Single", budget: "$1,200", date: "Jul 5", stage: "New" },
-      { id: "c2", name: "Darius Cole", email: "darius@example.com", project: "Mixing · Single", budget: "$650", date: "Jul 4", stage: "Contacted" },
-      { id: "c3", name: "Kira Lane", email: "kira@example.com", project: "Beat Licensing · Custom", budget: "$900", date: "Jul 2", stage: "In Progress" },
-      { id: "c4", name: "Northline Media", email: "music@example.com", project: "Sync · Composition", budget: "$2,500", date: "Jun 28", stage: "In Progress" },
-      { id: "c5", name: "Eli Monroe", email: "eli@example.com", project: "Mastering · EP", budget: "$800", date: "Jun 20", stage: "Completed" }
-    ],
     catalog: jmtCatalog,
     catalogTitle: "Beat Library",
     catalogDescription: "Search, review, and organize the JMT Music instrumental catalog.",
@@ -117,12 +110,6 @@ export const siteConfigs: Record<SiteId, SiteConfig> = {
       { label: "Primary brand", value: "Jonathan Tripp" },
       { label: "Accent", value: "Prepared for site audit" },
       { label: "Voice", value: "Personal, accomplished, inviting" }
-    ],
-    clients: [
-      { id: "jt1", name: "Avery Morgan", email: "avery@example.com", project: "Piano Lessons · Adult beginner", budget: "$240/mo", date: "Jul 5", stage: "New" },
-      { id: "jt2", name: "Riverside Hotel", email: "events@example.com", project: "Live Gigs · Cocktail event", budget: "$750", date: "Jul 3", stage: "Contacted" },
-      { id: "jt3", name: "Nina Brooks", email: "nina@example.com", project: "Piano Lessons · Intermediate", budget: "$240/mo", date: "Jul 1", stage: "In Progress" },
-      { id: "jt4", name: "Evergreen Arts", email: "booking@example.com", project: "Live Gigs · Artist showcase", budget: "$1,100", date: "Jun 27", stage: "Completed" }
     ],
     catalog: [],
     catalogTitle: "Performance Library",

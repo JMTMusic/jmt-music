@@ -104,6 +104,53 @@ export async function getPropertyProjects(site: SiteConfig): Promise<ProjectsRes
   }
 }
 
+/**
+ * Reads every project already linked to one client, for the Growth Engine's
+ * "convert lead to project" duplicate-prevention check. A separate scoped query rather
+ * than filtering `getPropertyProjects`'s result, since the caller (a server action) may
+ * not already have the full property project list in memory.
+ */
+export async function getClientProjects(site: SiteConfig, clientId: string): Promise<ProjectsResult> {
+  try {
+    const supabase = createSupabaseAdminClient();
+    const { data: property, error: propertyError } = await supabase
+      .from("properties")
+      .select("id")
+      .eq("slug", site.id)
+      .maybeSingle();
+
+    if (propertyError || !property) {
+      return {
+        projects: [],
+        status: "error",
+        detail: propertyError ? "Property lookup failed" : "Property not found in Supabase"
+      };
+    }
+
+    const { data, error } = await supabase
+      .from("projects")
+      .select(
+        "id, property_id, type, title, phase, detail_stage, stage_changed_at, client_id, beat_id, target_date, is_waiting, waiting_note, waiting_since, next_action_override, created_by, created_at, updated_at"
+      )
+      .eq("property_id", property.id)
+      .eq("client_id", clientId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      return { projects: [], status: "error", detail: "Supabase project query failed" };
+    }
+
+    const projects = ((data || []) as ProjectRow[]).map(mapRow);
+    return {
+      projects,
+      status: projects.length ? "ready" : "empty",
+      detail: projects.length ? `${projects.length} linked project${projects.length === 1 ? "" : "s"}` : "No linked projects yet"
+    };
+  } catch {
+    return { projects: [], status: "error", detail: "Supabase is not configured or reachable" };
+  }
+}
+
 /** Today's Focus: active work that isn't blocked on someone/something else. */
 export function selectTodaysFocus(projects: Project[]): Project[] {
   return projects.filter((project) => project.phase !== "done" && !project.isWaiting);

@@ -26,14 +26,115 @@ export type Beat = {
   sortOrder?: number;
 };
 
+/** Growth Engine lifecycle. Extends the client relationship — not a parallel "leads" system. */
+export type LeadStage =
+  | "new_lead"
+  | "qualified"
+  | "conversation"
+  | "proposal_sent"
+  | "negotiating"
+  | "booked"
+  | "project"
+  | "repeat_client";
+
+/**
+ * A client/lead relationship. `artist_name` is the primary display identity (required);
+ * `contact_name` is an optional individual contact person — display falls back to
+ * artistName when contactName is blank. `name` is the deprecated legacy column, retained
+ * for backward compatibility only; new code should never write to it.
+ */
 export type Client = {
   id: string;
-  name: string;
-  email: string;
-  project: string;
-  budget: string;
-  date: string;
-  stage: "New" | "Contacted" | "In Progress" | "Completed";
+  propertyId: string;
+  artistName: string;
+  contactName: string | null;
+  legacyName: string | null;
+  email: string | null;
+  phone: string | null;
+  projectType: string | null;
+  budget: string | null;
+  platform: string | null;
+  socialLinks: Record<string, string>;
+  tags: string[];
+  stage: LeadStage;
+  isArchived: boolean;
+  nextFollowUpAt: string | null;
+  notes: string | null;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CommunicationDirection = "inbound" | "outbound" | "internal";
+
+/**
+ * A manual entry in the Communication Timeline. `type` is free text by design (Email,
+ * Instagram, Website Inquiry, Phone Call, Proposal, Contract, Invoice, Delivery,
+ * Follow-up, Internal Note, ...) — same convention as Project.detailStage.
+ */
+export type Communication = {
+  id: string;
+  clientId: string;
+  propertyId: string;
+  projectId: string | null;
+  direction: CommunicationDirection;
+  type: string;
+  platform: string | null;
+  subject: string | null;
+  body: string;
+  sentAt: string;
+  source: string;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/** A reusable, manually authored piece of outreach/proposal/delivery text. No AI generation. */
+export type Template = {
+  id: string;
+  propertyId: string;
+  category: string;
+  title: string;
+  content: string;
+  tags: string[];
+  description: string | null;
+  sortOrder: number;
+  isArchived: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+/** A deliberate, bounded taxonomy — unlike Template.category, new values require a migration. */
+export type DocumentType =
+  | "proposal"
+  | "production_agreement"
+  | "mixing_agreement"
+  | "mastering_agreement"
+  | "beat_license"
+  | "session_agreement"
+  | "invoice"
+  | "welcome_packet"
+  | "project_checklist";
+
+export type DocumentStatus = "draft" | "sent" | "signed" | "paid" | "void";
+
+/**
+ * Metadata and an optional external link only. No generation, no PDF export, no
+ * e-signature. A status of "signed" or "paid" is a manual entry, never system-verified.
+ */
+export type DocumentRecord = {
+  id: string;
+  propertyId: string;
+  type: DocumentType;
+  status: DocumentStatus;
+  clientId: string | null;
+  projectId: string | null;
+  title: string;
+  notes: string | null;
+  externalUrl: string | null;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 export type ProjectType = "beat" | "client_work" | "sync" | "website" | "content" | "other";
@@ -116,7 +217,6 @@ export type SiteConfig = SiteSummary & {
   contentChannels: ContentChannel[];
   leadCategories: string[];
   brandSettings: BrandSetting[];
-  clients: Client[];
   catalog: Beat[];
   catalogTitle: string;
   catalogDescription: string;
