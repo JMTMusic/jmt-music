@@ -1,5 +1,7 @@
 # JMT OS handoff — Cowork to Claude Code
 
+**Status note (2026-07-10):** this is a subordinate, code-level technical implementation handoff. The executive source of truth is `16 - Executive Handoff.md` in the Desktop Knowledge Base — when the two conflict, that document governs, and that is the one updated after every session. This file remains useful for its repo conventions, the approved UX spec below, and the stage-color legend, but it is not the front door to the business.
+
 This document captures everything decided in the Cowork session that produced the JMT OS v1 architecture, so implementation can continue in Claude Code without re-deriving context. Read this before writing any code.
 
 ## Repo facts
