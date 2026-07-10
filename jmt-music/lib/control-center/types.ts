@@ -36,6 +36,30 @@ export type Client = {
   stage: "New" | "Contacted" | "In Progress" | "Completed";
 };
 
+export type ProjectType = "beat" | "client_work" | "sync" | "website" | "content" | "other";
+
+export type ProjectPhase = "not_started" | "in_progress" | "finishing" | "ready" | "done";
+
+export type Project = {
+  id: string;
+  propertyId: string;
+  type: ProjectType;
+  title: string;
+  phase: ProjectPhase;
+  detailStage: string | null;
+  stageChangedAt: string;
+  clientId: string | null;
+  beatId: string | null;
+  targetDate: string | null;
+  isWaiting: boolean;
+  waitingNote: string | null;
+  waitingSince: string | null;
+  nextActionOverride: string | null;
+  createdBy: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type StatusItem = {
   label: string;
   detail: string;
