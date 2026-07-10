@@ -89,7 +89,7 @@ select count(*) from public.clients where artist_name is null;  -- expect 0
 
 5. Run migration 5 (`client_messages` extension), migration 6 (`template_library`), migration 7 (`document_records`), each as its own query, confirming success before moving to the next.
 6. In **Table Editor**, confirm `template_library` and `document_records` exist with RLS enabled, and confirm their policies in **Authentication → Policies** (same pattern as `clients`: staff read, owner all, editor insert/update, no anonymous policy).
-7. Application code (`client-repository.ts` etc.) falls back to mock data automatically if these tables/columns aren't present yet, so there is no strict ordering requirement between "run these migrations" and "deploy the Growth Engine code" — but running the migrations first is the safer direction and is what this project has done for every extension so far.
+7. Application code (`client-repository.ts` etc.) has no mock fallback for Growth Engine data — if these tables/columns aren't present yet, reads return status `"error"` with a descriptive detail message and the page renders an empty state, never fabricated leads/communications. There is no strict ordering requirement between "run these migrations" and "deploy the Growth Engine code" as a result, but running the migrations first is the safer direction and is what this project has done for every extension so far.
 
 ## First owner bootstrap
 
