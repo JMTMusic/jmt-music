@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { BarChart3, Building2, FileText, Globe2, LayoutDashboard, ListChecks, Menu, Music2, Search, Settings, Users, X } from "lucide-react";
+import { BarChart3, Building2, FileText, Globe2, LayoutDashboard, ListChecks, Menu, Music2, Search, Settings, Sprout, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { normalizeSiteId, siteRegistry } from "@/lib/control-center/site-registry";
 import type { NavigationItem } from "@/lib/control-center/types";
@@ -14,7 +14,7 @@ const navigation: NavigationItem[] = [
   { label: "Website", href: "/control-center/website", icon: Globe2 },
   { label: "Analytics", href: "/control-center/analytics", icon: BarChart3 },
   { label: "Content", href: "/control-center/content", icon: FileText },
-  { label: "Clients", href: "/control-center/clients", icon: Users },
+  { label: "Growth Engine", href: "/control-center/growth", icon: Sprout },
   { label: "Settings", href: "/control-center/settings", icon: Settings }
 ];
 
