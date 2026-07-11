@@ -13,9 +13,26 @@ select
   'Artist Introduction & Connection',
   'Introduce JMT Music in a way that starts a genuine relationship rather than making a sales pitch.',
   array['Instagram DM', 'Facebook Message', 'Email Introduction (adapted)', 'Networking', 'Cold Outreach'],
-  E'Hi {{artist_name}},\n\nI spent some time listening to your music today, and I really enjoyed what I heard.\n\nIt''s always encouraging to come across artists who are creating music with honesty and intention, and I wanted to reach out simply to say I appreciate what you''re doing.\n\nI love working alongside artists and helping bring their vision to life. Every project is different, but my approach never changes: every song deserves the same level of attention and care that the artist has poured into creating it.\n\nNo expectations at all—I just wanted to introduce myself, let you know I enjoyed your work, and say I''d love to connect. If another creative partner ever feels like the right fit for a future project, I''d be honored to be part of it.\n\nEither way, I wish you nothing but success, and I''ll be looking forward to hearing what you create next.\n\n— Jonathan\nJMT Music',
+  $message_body$Hi {{artist_name}},
+
+I spent some time listening to your music today, and I really enjoyed what I heard.
+
+It's always encouraging to come across artists who are creating music with honesty and intention, and I wanted to reach out simply to say I appreciate what you're doing.
+
+I love working alongside artists and helping bring their vision to life. Every project is different, but my approach never changes: every song deserves the same level of attention and care that the artist has poured into creating it.
+
+No expectations at all—I just wanted to introduce myself, let you know I enjoyed your work, and say I'd love to connect. If another creative partner ever feels like the right fit for a future project, I'd be honored to be part of it.
+
+Either way, I wish you nothing but success, and I'll be looking forward to hearing what you create next.
+
+— Jonathan
+JMT Music$message_body$,
   array['artist_name'],
-  E'This message is not intended to sell.\nIt exists to begin a relationship.\nThe artist should leave the conversation feeling respected whether they ever become a client or not.\nThe artist is always the hero.\nJMT Music is the creative partner.',
+  $internal_notes$This message is not intended to sell.
+It exists to begin a relationship.
+The artist should leave the conversation feeling respected whether they ever become a client or not.
+The artist is always the hero.
+JMT Music is the creative partner.$internal_notes$,
   1,
   'active',
   0
