@@ -19,8 +19,8 @@ export function withPlayNumbers<T extends Pick<Play, "id" | "createdAt">>(
 }
 
 /** Groups Plays by category, preserving whatever order the input array is already in within each group. */
-export function groupPlaysByCategory(plays: Play[]): Map<PlayCategory, Play[]> {
-  const map = new Map<PlayCategory, Play[]>();
+export function groupPlaysByCategory<T extends Play>(plays: T[]): Map<PlayCategory, T[]> {
+  const map = new Map<PlayCategory, T[]>();
   for (const play of plays) {
     const list = map.get(play.category) || [];
     list.push(play);
@@ -42,7 +42,7 @@ export function selectByStatus(plays: Play[], status: Play["status"]): Play[] {
  * contents — the four fields the spec calls out. Case-insensitive substring match, no
  * external search dependency for a dataset this size.
  */
-export function searchPlays(plays: Play[], query: string, categoryLabels: Record<PlayCategory, string>): Play[] {
+export function searchPlays<T extends Play>(plays: T[], query: string, categoryLabels: Record<PlayCategory, string>): T[] {
   const normalized = query.trim().toLowerCase();
   if (!normalized) return plays;
   return plays.filter((play) => {
