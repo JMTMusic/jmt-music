@@ -89,22 +89,60 @@ export type Communication = {
   updatedAt: string;
 };
 
-/** A reusable, manually authored piece of outreach/proposal/delivery text. No AI generation. */
-export type Template = {
+/** A deliberate, bounded taxonomy — this is a communication *stage*, not a platform. Platforms live in Play.bestUsedFor. */
+export type PlayCategory =
+  | "outreach"
+  | "discovery"
+  | "onboarding"
+  | "production"
+  | "delivery"
+  | "reviews"
+  | "follow_up"
+  | "internal_sop";
+
+export type PlayStatus = "draft" | "active" | "archived";
+
+/**
+ * A single entry in the Communication Playbook — a "Play." This is not a clipboard of
+ * copy/paste snippets: it documents the way JMT Music actually communicates (purpose,
+ * context, internal notes) and is meant to be refined over time via version history.
+ * No AI generation — every Play is manually authored and proven.
+ */
+export type Play = {
   id: string;
   propertyId: string;
-  category: string;
+  category: PlayCategory;
   title: string;
-  content: string;
+  purpose: string | null;
+  bestUsedFor: string[];
+  messageBody: string;
+  variables: string[];
+  internalNotes: string | null;
+  versionNumber: number;
+  status: PlayStatus;
+  isFavorite: boolean;
   tags: string[];
-  description: string | null;
   sortOrder: number;
-  isArchived: boolean;
+  createdBy: string | null;
   createdAt: string;
   updatedAt: string;
 };
 
-/** A deliberate, bounded taxonomy — unlike Template.category, new values require a migration. */
+/** One prior snapshot of a Play, written just before an update overwrites the live row. Read-only. */
+export type PlayVersion = {
+  id: string;
+  playbookId: string;
+  versionNumber: number;
+  title: string;
+  purpose: string | null;
+  messageBody: string;
+  variables: string[];
+  internalNotes: string | null;
+  changedBy: string | null;
+  changedAt: string;
+};
+
+/** A deliberate, bounded taxonomy — unlike Play.category, new values require a migration. */
 export type DocumentType =
   | "proposal"
   | "production_agreement"

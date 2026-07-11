@@ -9,7 +9,7 @@ const tabs = [
   { label: "Outreach", href: "/control-center/growth", icon: LayoutDashboard },
   { label: "Lead Pipeline", href: "/control-center/growth/leads", icon: Users },
   { label: "Communications", href: "/control-center/growth/communications", icon: MessagesSquare },
-  { label: "Templates", href: "/control-center/growth/templates", icon: FileText },
+  { label: "Playbook", href: "/control-center/growth/playbook", icon: FileText },
   { label: "Documents", href: "/control-center/growth/documents", icon: CheckSquare }
 ];
 
