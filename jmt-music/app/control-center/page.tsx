@@ -24,6 +24,9 @@ import {
 import { PROJECT_TYPE_LABELS } from "@/lib/control-center/project-display";
 import type { Metric, Project, SitePageProps } from "@/lib/control-center/types";
 import { inboundCounts } from "@/lib/inbound/repository";
+import { listSalesOpportunities } from "@/lib/sales/repository";
+import { getOpportunityNextAction, isFollowUpOverdue, selectDueForFollowUp } from "@/lib/sales/pipeline";
+import type { SalesOpportunityRecord } from "@/lib/sales/types";
 
 const metricIcons: Record<Metric["icon"], typeof Users> = {
   users: Users, activity: Activity, audio: AudioLines, click: MousePointerClick,
@@ -55,6 +58,20 @@ function FocusRow({ project }: { project: Project }) {
   );
 }
 
+function SalesFollowUpRow({ opportunity, siteQuery, now }: { opportunity: SalesOpportunityRecord; siteQuery: string; now: Date }) {
+  const overdue = isFollowUpOverdue(opportunity, now);
+  return (
+    <a href={`/control-center/sales/pipeline/${opportunity.id}${siteQuery}`} className="flex items-center gap-4 rounded-xl p-3 transition hover:bg-white/[0.035]">
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sky-300/8 text-[10px] font-bold uppercase text-sky-300">$</span>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-semibold text-slate-100">{opportunity.title}</p>
+        <p className="truncate text-xs text-slate-500">{getOpportunityNextAction(opportunity)}</p>
+      </div>
+      {overdue && <span className="ml-auto shrink-0 rounded-full border border-red-400/25 bg-red-400/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-red-300">Overdue</span>}
+    </a>
+  );
+}
+
 function WaitingRow({ project }: { project: Project }) {
   return (
     <div className="flex items-center gap-4 rounded-xl p-3 transition hover:bg-white/[0.035]">
@@ -73,19 +90,22 @@ export default async function DashboardPage({ searchParams }: SitePageProps) {
   const { site: requestedSite } = await searchParams;
   const site = getSiteConfig(requestedSite);
   const siteQuery = site.id === "jmt-music" ? "" : `?site=${site.id}`;
-  const [projectsResult, inbound] = await Promise.all([getPropertyProjects(site), inboundCounts(site.id)]);
+  const now = new Date();
+  const [projectsResult, inbound, salesResult] = await Promise.all([getPropertyProjects(site), inboundCounts(site.id), listSalesOpportunities(site)]);
   const projects = projectsResult.projects;
   const todaysFocus = selectTodaysFocus(projects);
   const waitingOn = selectWaitingOn(projects);
   const workload = selectWorkload(projects);
   const totalActive = workload.reduce((sum, item) => sum + item.activeCount, 0);
   const zone = getWorkloadZone(totalActive);
+  const salesFollowUps = selectDueForFollowUp(salesResult.opportunities, now);
 
   return (
     <>
       <PageHeader eyebrow={`${site.name} · Sunday, July 5`} title="Good afternoon, Jonathan." description={`A focused view of ${site.name} performance, leads, and the next actions that move this property forward.`} actions={<ActionButton href={`https://${site.domain}`}>View website</ActionButton>} />
       {site.supportMessage && <div className="mb-6 rounded-xl border border-amber-300/15 bg-amber-300/[0.055] px-4 py-3 text-xs leading-5 text-amber-100/75"><strong className="mr-2 text-amber-200">Prepared property:</strong>{site.supportMessage}</div>}
       {projectsResult.status === "error" && <div className="mb-6 rounded-xl border border-amber-300/15 bg-amber-300/[0.055] px-4 py-3 text-xs text-amber-100/75"><strong className="mr-2 text-amber-200">Projects unavailable:</strong>{projectsResult.detail}</div>}
+      {salesResult.status === "error" && <div className="mb-6 rounded-xl border border-amber-300/15 bg-amber-300/[0.055] px-4 py-3 text-xs text-amber-100/75"><strong className="mr-2 text-amber-200">Sales unavailable:</strong>{salesResult.detail}</div>}
       {!inbound.configured && <div className="mb-6 rounded-xl border border-amber-300/15 bg-amber-300/[0.055] px-4 py-3 text-xs text-amber-100/75"><strong className="mr-2 text-amber-200">Inbound unavailable:</strong>Configure Supabase and apply the inbound migration to load live attention counts.</div>}
 
       <section className="mb-10">
@@ -98,7 +118,14 @@ export default async function DashboardPage({ searchParams }: SitePageProps) {
       <section>
         <SectionHeading title="Today's Focus" description="Active work that needs your attention next." />
         <AdminCard className="p-2">
-          {todaysFocus.length ? todaysFocus.map((project) => <FocusRow key={project.id} project={project} />) : <p className="p-6 text-sm text-slate-500">Nothing needs attention right now.</p>}
+          {todaysFocus.length || salesFollowUps.length ? (
+            <>
+              {todaysFocus.map((project) => <FocusRow key={project.id} project={project} />)}
+              {salesFollowUps.map((opportunity) => <SalesFollowUpRow key={opportunity.id} opportunity={opportunity} siteQuery={siteQuery} now={now} />)}
+            </>
+          ) : (
+            <p className="p-6 text-sm text-slate-500">Nothing needs attention right now.</p>
+          )}
         </AdminCard>
       </section>
 

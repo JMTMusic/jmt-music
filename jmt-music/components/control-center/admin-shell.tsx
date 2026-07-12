@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { BarChart3, Building2, FileText, Globe2, Inbox, LayoutDashboard, ListChecks, Menu, Music2, Search, Settings, Sprout, X } from "lucide-react";
+import { BarChart3, Building2, DollarSign, FileText, Globe2, Inbox, LayoutDashboard, ListChecks, Menu, Music2, Search, Settings, Sprout, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { normalizeSiteId, siteRegistry } from "@/lib/control-center/site-registry";
 import type { NavigationItem } from "@/lib/control-center/types";
@@ -10,6 +10,7 @@ import type { NavigationItem } from "@/lib/control-center/types";
 const navigation: NavigationItem[] = [
   { label: "Dashboard", href: "/control-center", icon: LayoutDashboard },
   { label: "Projects", href: "/control-center/projects", icon: ListChecks },
+  { label: "Sales", href: "/control-center/sales", icon: DollarSign },
   { label: "Inbox", href: "/control-center/inbox", icon: Inbox },
   { label: "Beat Library", href: "/control-center/beats", icon: Music2 },
   { label: "Website", href: "/control-center/website", icon: Globe2 },
