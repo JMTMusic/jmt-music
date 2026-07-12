@@ -1,6 +1,7 @@
 import { Archive } from "lucide-react";
 import { AddLeadDialog } from "@/components/control-center/add-lead-dialog";
 import { LeadCard } from "@/components/control-center/lead-card";
+import kanbanStyles from "@/components/control-center/kanban-board.module.css";
 import { EmptyState, PageHeader } from "@/components/control-center/ui";
 import { getControlCenterAccessStatus } from "@/lib/control-center/access";
 import { getPropertyClients } from "@/lib/control-center/client-repository";
@@ -52,7 +53,7 @@ export default async function LeadPipelinePage({ searchParams }: SitePageProps) 
               );
             })}
           </div>
-          <div className="hidden gap-4 overflow-x-auto pb-4 lg:grid lg:auto-cols-[280px] lg:grid-flow-col">
+          <div className={`hidden gap-4 overflow-x-auto pb-4 lg:grid lg:auto-cols-[280px] lg:grid-flow-col ${kanbanStyles.scrollArea}`}>
             {STAGE_ORDER.map((stage) => {
               const stageLeads = selectByStage(active, stage);
               return (

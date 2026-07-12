@@ -1,5 +1,6 @@
 import { AddContentItemDialog } from "@/components/control-center/add-content-item-dialog";
 import { ContentItemCard } from "@/components/control-center/content-item-card";
+import kanbanStyles from "@/components/control-center/kanban-board.module.css";
 import { EmptyState, PageHeader } from "@/components/control-center/ui";
 import { getControlCenterAccessStatus } from "@/lib/control-center/access";
 import { getSiteConfig } from "@/lib/control-center/data";
@@ -66,7 +67,7 @@ export default async function ContentPipelinePage({ searchParams }: SitePageProp
               );
             })}
           </div>
-          <div className="hidden gap-4 overflow-x-auto pb-4 lg:grid lg:auto-cols-[280px] lg:grid-flow-col">
+          <div className={`hidden gap-4 overflow-x-auto pb-4 lg:grid lg:auto-cols-[280px] lg:grid-flow-col ${kanbanStyles.scrollArea}`}>
             {STATUS_ORDER.map((status) => {
               const stageItems = selectByStatus(items, status);
               return (

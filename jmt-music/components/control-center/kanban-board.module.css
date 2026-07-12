@@ -1,0 +1,33 @@
+/**
+ * Shared horizontal-scrollbar styling for every Control Center Kanban/pipeline board
+ * (Lead Pipeline, Content Pipeline, and any future board reusing this same
+ * `overflow-x-auto lg:grid-flow-col` wrapper shape). A CSS Module so it's scoped to only
+ * the components that import it — the app has one global stylesheet (app/globals.css)
+ * shared with the public marketing site, and this never touches that file.
+ *
+ * Colors match the Control Center's existing tokens: #05080d is AdminShell's own page
+ * background (components/control-center/admin-shell.tsx), and the hover tint is the same
+ * sky-300 baby-blue accent used everywhere else (e.g. hover:border-sky-300/40).
+ */
+.scrollArea {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) #05080d;
+}
+
+.scrollArea::-webkit-scrollbar {
+  height: 7px;
+}
+
+.scrollArea::-webkit-scrollbar-track {
+  background: #05080d;
+  border-radius: 999px;
+}
+
+.scrollArea::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+}
+
+.scrollArea::-webkit-scrollbar-thumb:hover {
+  background: rgba(125, 211, 252, 0.35);
+}
