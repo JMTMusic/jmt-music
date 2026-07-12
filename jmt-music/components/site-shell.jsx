@@ -39,7 +39,7 @@ export function SiteShell({ children, footerCms, extraGlobalSections = [] }) {
     };
   }, [open]);
 
-  if (pathname.startsWith("/control-center")) {
+  if (pathname.startsWith("/control-center") || pathname.startsWith("/start-your-project") || pathname.startsWith("/project-setup")) {
     return children;
   }
 

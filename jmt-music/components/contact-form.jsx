@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AlertCircle, CheckCircle2, LoaderCircle, Send } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
+import { submitBeatInquiry, submitContact } from "@/app/contact/actions";
 
-const FORM_ENDPOINT = "https://formsubmit.co/ajax/hello@jmtmusic.studio";
 const THANK_YOU_URL = "https://jmtmusic.studio/thank-you";
 
 const projectOptions = [
@@ -15,8 +15,9 @@ const projectOptions = [
   "Sync / Custom Cue"
 ];
 
-export function ContactForm({ initialProject = "", initialBeat = "" }) {
+export function ContactForm({ initialProject = "", initialBeat = "", initialBeatSlug = "" }) {
   const [status, setStatus] = useState("idle");
+  const token = useRef(null);
 
   const submitForm = async (event) => {
     event.preventDefault();
@@ -30,14 +31,13 @@ export function ContactForm({ initialProject = "", initialBeat = "" }) {
 
     setStatus("submitting");
     try {
-      const response = await fetch(FORM_ENDPOINT, {
-        method: "POST",
-        headers: { Accept: "application/json" },
-        body: new FormData(form)
-      });
-
-      if (!response.ok) throw new Error("Form delivery failed");
       const formData = new FormData(form);
+      token.current ||= crypto.randomUUID();
+      const common = { submissionToken:token.current,name:formData.get("name"),email:formData.get("email"),subject:formData.get("project"),message:formData.get("description") };
+      const result = initialBeat
+        ? await submitBeatInquiry({...common,beatTitle:initialBeat,beatSlug:initialBeatSlug,beatUrl:window.location.href,licenseInterest:formData.get("project"),intendedUse:`Timeline: ${formData.get("timeline") || "Not provided"}. Budget: ${formData.get("budget") || "Not provided"}. References: ${formData.get("references") || "None"}.`})
+        : await submitContact(common);
+      if(result.status === "error") throw new Error("Form delivery failed");
       trackEvent("contact_form_submit", {
         project_type: formData.get("project"),
         budget_range: formData.get("budget"),
@@ -45,6 +45,7 @@ export function ContactForm({ initialProject = "", initialBeat = "" }) {
       });
       setStatus("success");
       form.reset();
+      token.current = null;
       window.location.assign(THANK_YOU_URL);
     } catch {
       setStatus("error");
@@ -54,15 +55,9 @@ export function ContactForm({ initialProject = "", initialBeat = "" }) {
   return (
     <form
       className="inquiry-form"
-      action="https://formsubmit.co/hello@jmtmusic.studio"
-      method="POST"
       onSubmit={submitForm}
       noValidate
     >
-      <input type="hidden" name="_subject" value="New JMT Music project inquiry" />
-      <input type="hidden" name="_template" value="table" />
-      <input type="hidden" name="_captcha" value="false" />
-      <input type="hidden" name="_next" value={THANK_YOU_URL} />
       <input type="text" name="_honey" tabIndex="-1" autoComplete="off" hidden />
       {initialBeat && <input type="hidden" name="beat" value={initialBeat} />}
 
@@ -90,7 +85,7 @@ export function ContactForm({ initialProject = "", initialBeat = "" }) {
       <button className="button button-primary form-submit" type="submit" disabled={status === "submitting"}>
         {status === "submitting" ? <><LoaderCircle className="spin" />Sending inquiry</> : <>Send inquiry <Send /></>}
       </button>
-      <p className="form-note">Your inquiry is delivered to hello@jmtmusic.studio. Links to private demos and references are welcome.</p>
+      <p className="form-note">Your inquiry is reviewed personally. Links to private demos and references are welcome.</p>
     </form>
   );
 }

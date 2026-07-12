@@ -55,7 +55,7 @@ function LicenseAction({ track }) {
     return <a className="catalog-license-link" href={track.beatstarsUrl} target="_blank" rel="noopener noreferrer" data-analytics-event="beatstars_link_click" data-analytics-label={track.title}>License on BeatStars <ShoppingBag /></a>;
   }
 
-  return <Link className="catalog-license-link" href={`/contact?service=Beat%20Licensing&beat=${encodeURIComponent(track.title)}`}>Inquire to License <ArrowRight /></Link>;
+  return <Link className="catalog-license-link" href={`/contact?service=Beat%20Licensing&beat=${encodeURIComponent(track.title)}&beatSlug=${encodeURIComponent(track.slug || "")}`}>Inquire to License <ArrowRight /></Link>;
 }
 
 export function GlobalPlayer() {

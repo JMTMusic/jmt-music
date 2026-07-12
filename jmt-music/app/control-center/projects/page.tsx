@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AdminCard, EmptyState, PageHeader } from "@/components/control-center/ui";
 import { getPropertyProjects } from "@/lib/control-center/project-repository";
 import { getSiteConfig } from "@/lib/control-center/data";
@@ -17,12 +18,12 @@ function formatTargetDate(value: string | null): string | null {
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "2-digit", year: "numeric", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`));
 }
 
-function ProjectRow({ project }: { project: Project }) {
+function ProjectRow({ project, siteQuery }: { project: Project; siteQuery: string }) {
   const targetDate = formatTargetDate(project.targetDate);
   return (
     <AdminCard className="p-4">
       <div className="flex items-start justify-between gap-3">
-        <p className="min-w-0 break-words text-sm font-semibold text-slate-100">{project.title}</p>
+        <Link href={`/control-center/projects/${project.id}${siteQuery}`} className="min-w-0 break-words text-sm font-semibold text-slate-100 hover:text-sky-200">{project.title}</Link>
         {project.isWaiting && <span className="shrink-0 rounded-full border border-amber-300/25 bg-amber-300/10 px-2.5 py-1 text-[10px] font-semibold text-amber-200">Waiting</span>}
       </div>
       <p className="mt-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">{PROJECT_TYPE_LABELS[project.type]}</p>
@@ -37,6 +38,7 @@ function ProjectRow({ project }: { project: Project }) {
 export default async function ProjectsPage({ searchParams }: SitePageProps) {
   const { site: requestedSite } = await searchParams;
   const site = getSiteConfig(requestedSite);
+  const siteQuery = site.id === "jmt-music" ? "" : `?site=${site.id}`;
   const result = await getPropertyProjects(site);
 
   return (
@@ -65,7 +67,7 @@ export default async function ProjectsPage({ searchParams }: SitePageProps) {
                   <span className="grid h-6 min-w-6 place-items-center rounded-full bg-white/5 px-1.5 text-[10px] text-slate-500">{phaseProjects.length}</span>
                 </div>
                 <div className="space-y-3">
-                  {phaseProjects.map((project) => <ProjectRow key={project.id} project={project} />)}
+                  {phaseProjects.map((project) => <ProjectRow key={project.id} project={project} siteQuery={siteQuery} />)}
                 </div>
               </section>
             );

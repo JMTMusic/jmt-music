@@ -1,0 +1,12 @@
+export const DISCOVERY_STATUSES = ["new","reviewing","follow_up_needed","accepted","referred","declined","converted"] as const;
+export const MESSAGE_STATUSES = ["new","open","awaiting_reply","resolved","archived"] as const;
+export const BEAT_INQUIRY_STATUSES = ["new","reviewing","follow_up_needed","quoted","licensed","converted","closed"] as const;
+export type DiscoveryStatus = typeof DISCOVERY_STATUSES[number];
+export type MessageStatus = typeof MESSAGE_STATUSES[number];
+export type BeatInquiryStatus = typeof BEAT_INQUIRY_STATUSES[number];
+export type InboundKind = "discoveries" | "messages" | "beat-inquiries";
+export type SubmissionResult = { status: "success"; id: string; duplicate: boolean } | { status: "error"; message: string };
+export type ProjectDiscoveryInput = { submissionToken:string; firstName:string; artistName:string; email:string; phone:string; projectType:string; vision:string; inspiration:string; currentStage:string; timeline:string; additionalNotes:string };
+export type ContactMessageInput = { submissionToken:string; name:string; email:string; phone?:string; subject:string; message:string };
+export type BeatInquiryInput = { submissionToken:string; name:string; artistName?:string; email:string; phone?:string; beatSlug?:string; beatTitle:string; beatUrl?:string; licenseInterest?:string; intendedUse?:string; message:string };
+export type InboundRecord = Record<string, unknown> & { id:string; status:string; submitted_at:string; internal_notes:string|null; client_id:string|null; project_id:string|null };

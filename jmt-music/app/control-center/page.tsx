@@ -23,6 +23,7 @@ import {
 } from "@/lib/control-center/project-pipeline";
 import { PROJECT_TYPE_LABELS } from "@/lib/control-center/project-display";
 import type { Metric, Project, SitePageProps } from "@/lib/control-center/types";
+import { inboundCounts } from "@/lib/inbound/repository";
 
 const metricIcons: Record<Metric["icon"], typeof Users> = {
   users: Users, activity: Activity, audio: AudioLines, click: MousePointerClick,
@@ -72,7 +73,7 @@ export default async function DashboardPage({ searchParams }: SitePageProps) {
   const { site: requestedSite } = await searchParams;
   const site = getSiteConfig(requestedSite);
   const siteQuery = site.id === "jmt-music" ? "" : `?site=${site.id}`;
-  const projectsResult = await getPropertyProjects(site);
+  const [projectsResult, inbound] = await Promise.all([getPropertyProjects(site), inboundCounts(site.id)]);
   const projects = projectsResult.projects;
   const todaysFocus = selectTodaysFocus(projects);
   const waitingOn = selectWaitingOn(projects);
@@ -85,6 +86,14 @@ export default async function DashboardPage({ searchParams }: SitePageProps) {
       <PageHeader eyebrow={`${site.name} · Sunday, July 5`} title="Good afternoon, Jonathan." description={`A focused view of ${site.name} performance, leads, and the next actions that move this property forward.`} actions={<ActionButton href={`https://${site.domain}`}>View website</ActionButton>} />
       {site.supportMessage && <div className="mb-6 rounded-xl border border-amber-300/15 bg-amber-300/[0.055] px-4 py-3 text-xs leading-5 text-amber-100/75"><strong className="mr-2 text-amber-200">Prepared property:</strong>{site.supportMessage}</div>}
       {projectsResult.status === "error" && <div className="mb-6 rounded-xl border border-amber-300/15 bg-amber-300/[0.055] px-4 py-3 text-xs text-amber-100/75"><strong className="mr-2 text-amber-200">Projects unavailable:</strong>{projectsResult.detail}</div>}
+      {!inbound.configured && <div className="mb-6 rounded-xl border border-amber-300/15 bg-amber-300/[0.055] px-4 py-3 text-xs text-amber-100/75"><strong className="mr-2 text-amber-200">Inbound unavailable:</strong>Configure Supabase and apply the inbound migration to load live attention counts.</div>}
+
+      <section className="mb-10">
+        <SectionHeading title="Inbound" description="New conversations waiting for a thoughtful review." />
+        <div className="grid gap-4 sm:grid-cols-3">
+          {[["New Discoveries",inbound.discoveries,"discoveries"],["New Messages",inbound.messages,"messages"],["New Beat Inquiries",inbound.beatInquiries,"beat-inquiries"]].map(([label,count,tab])=><a key={String(tab)} href={`/control-center/inbox?tab=${tab}${site.id==="jmt-music"?"":`&site=${site.id}`}`}><AdminCard className="p-5 transition hover:border-sky-300/25"><p className="text-3xl font-semibold text-white">{String(count)}</p><p className="mt-1 text-xs text-slate-400">{String(label)}</p></AdminCard></a>)}
+        </div>
+      </section>
 
       <section>
         <SectionHeading title="Today's Focus" description="Active work that needs your attention next." />

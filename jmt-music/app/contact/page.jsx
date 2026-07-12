@@ -34,6 +34,8 @@ export default async function ContactPage({ searchParams }) {
   const initialProject = typeof requestedService === "string" ? serviceAliases[requestedService.trim().toLowerCase()] || "" : "";
   const requestedBeat = firstParam(params?.beat);
   const initialBeat = typeof requestedBeat === "string" ? requestedBeat.trim().slice(0, 100) : "";
+  const requestedBeatSlug = firstParam(params?.beatSlug);
+  const initialBeatSlug = typeof requestedBeatSlug === "string" ? requestedBeatSlug.trim().slice(0, 160) : "";
   const [intro, formCms, publishedSections] = await Promise.all([
     getPublishedSection("contact"),
     getPublishedSection("contact-form"),
@@ -44,7 +46,7 @@ export default async function ContactPage({ searchParams }) {
     <><section className="contact-page">
       <div className="site-width contact-layout">
         {!intro?.hidden && <Reveal className="contact-intro"><p className="eyebrow">{intro?.eyebrow ?? "Start a project"}</p><h1>{intro?.heading ?? "Tell me what you're making."}</h1><p>{intro?.body ?? "Share the idea, where the project stands, and what you want the music to become. Every inquiry is reviewed personally, with a clear reply about next steps."}</p><div className="contact-guidance"><h2>Helpful to include</h2><ul><li>A demo, voice memo, or reference link</li><li>The service you need and your current timeline</li><li>The feeling, audience, or release goal</li></ul></div><div className="contact-links"><a href="mailto:hello@jmtmusic.studio"><Mail /> hello@jmtmusic.studio</a><a href={externalLinks.instagram} target="_blank" rel="noopener noreferrer"><Instagram /> Instagram</a><a href={externalLinks.beatstars} target="_blank" rel="noopener noreferrer" data-analytics-event="beatstars_link_click" data-analytics-label="Contact page"><Music2 /> BeatStars</a></div></Reveal>}
-        {!formCms?.hidden && <Reveal><ContactForm initialProject={initialProject} initialBeat={initialBeat} /></Reveal>}
+        {!formCms?.hidden && <Reveal><ContactForm initialProject={initialProject} initialBeat={initialBeat} initialBeatSlug={initialBeatSlug} /></Reveal>}
       </div>
     </section><PublicCmsSections sections={extraSections} /></>
   );
