@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowUpRight, Mail } from "lucide-react";
+import { AddOpportunityDialog } from "@/components/control-center/add-opportunity-dialog";
 import { ConvertOpportunityDialog } from "@/components/control-center/convert-opportunity-dialog";
 import { SalesOpportunityDetailActions } from "@/components/control-center/sales-opportunity-detail-actions";
 import { AdminCard, PageHeader, SectionHeading } from "@/components/control-center/ui";
@@ -65,14 +66,17 @@ export default async function SalesOpportunityDetailPage({ searchParams, params 
         title={opportunity.title}
         description={`${opportunity.artistName} · ${PLATFORM_LABELS[opportunity.platform]} · ${SERVICE_TYPE_LABELS[opportunity.serviceType]}`}
         actions={
-          opportunity.convertedProjectId ? (
-            <Link href={`/control-center/projects/${opportunity.convertedProjectId}${siteQuery}`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 text-sm font-semibold text-slate-200 transition hover:border-sky-300/40 hover:bg-sky-300/10">View Project<ArrowUpRight className="h-4 w-4" /></Link>
-          ) : (
-            <div className="flex flex-col items-end gap-1.5">
-              <ConvertOpportunityDialog propertyId={site.id} opportunityId={opportunity.id} opportunityDeadline={opportunity.deadline} opportunityClientId={opportunity.clientId} clients={clientsResult.clients} disabled={!access.canCreate || opportunity.status !== "won"} />
-              {opportunity.status !== "won" && <p className="text-[11px] text-slate-500">Move this opportunity to Won before converting.</p>}
-            </div>
-          )
+          <>
+            <AddOpportunityDialog propertyId={site.id} opportunity={opportunity} clients={clientsResult.clients} disabled={!access.canCreate} />
+            {opportunity.convertedProjectId ? (
+              <Link href={`/control-center/projects/${opportunity.convertedProjectId}${siteQuery}`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 text-sm font-semibold text-slate-200 transition hover:border-sky-300/40 hover:bg-sky-300/10">View Project<ArrowUpRight className="h-4 w-4" /></Link>
+            ) : (
+              <div className="flex flex-col items-end gap-1.5">
+                <ConvertOpportunityDialog propertyId={site.id} opportunityId={opportunity.id} opportunityDeadline={opportunity.deadline} opportunityClientId={opportunity.clientId} clients={clientsResult.clients} disabled={!access.canCreate || opportunity.status !== "won"} />
+                {opportunity.status !== "won" && <p className="text-[11px] text-slate-500">Move this opportunity to Won before converting.</p>}
+              </div>
+            )}
+          </>
         }
       />
 

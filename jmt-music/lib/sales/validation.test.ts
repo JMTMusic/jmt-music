@@ -12,7 +12,8 @@ import {
   validateProbability,
   validateProposalSentAt,
   validateServiceType,
-  validateTitle
+  validateTitle,
+  validateUpdateSalesOpportunityInput
 } from "./validation";
 
 describe("date anchoring for bare 'YYYY-MM-DD' input", () => {
@@ -116,5 +117,51 @@ describe("uuid helpers", () => {
     expect(validateOptionalUuid(uuid, "Client id")).toBe(uuid);
     expect(validateOptionalUuid(null, "Client id")).toBeNull();
     expect(() => validateOptionalUuid("not-a-uuid", "Client id")).toThrow();
+  });
+});
+
+describe("validateUpdateSalesOpportunityInput", () => {
+  const validClientId = "8b3c1e2a-1f4d-4c9a-9b2e-2a1c3d4e5f6a";
+
+  it("includes only the keys actually present on the raw input (partial-update semantics)", () => {
+    const result = validateUpdateSalesOpportunityInput({ title: "New title" });
+    expect(result).toEqual({ title: "New title" });
+    expect("artistName" in result).toBe(false);
+    expect("probability" in result).toBe(false);
+  });
+
+  it("never reads status, convertedProjectId, or convertedClientId, even when present on the raw input", () => {
+    const result = validateUpdateSalesOpportunityInput({
+      title: "New title",
+      status: "converted",
+      convertedProjectId: "11111111-1111-4111-8111-111111111111",
+      convertedClientId: "22222222-2222-4222-8222-222222222222"
+    }) as Record<string, unknown>;
+    expect(result.title).toBe("New title");
+    expect("status" in result).toBe(false);
+    expect("convertedProjectId" in result).toBe(false);
+    expect("convertedClientId" in result).toBe(false);
+  });
+
+  it("validates clientId as an optional uuid, allowing null to clear it", () => {
+    expect(validateUpdateSalesOpportunityInput({ clientId: validClientId })).toEqual({ clientId: validClientId });
+    expect(validateUpdateSalesOpportunityInput({ clientId: null })).toEqual({ clientId: null });
+    expect(() => validateUpdateSalesOpportunityInput({ clientId: "not-a-uuid" })).toThrow();
+  });
+
+  it("anchors a bare date-only followUpAt/proposalSentAt through the same update path used by the edit form", () => {
+    const result = validateUpdateSalesOpportunityInput({ followUpAt: "2026-07-16", proposalSentAt: "2026-07-12" });
+    expect(result.followUpAt).toBe("2026-07-16T12:00:00.000Z");
+    expect(result.proposalSentAt).toBe("2026-07-12T12:00:00.000Z");
+  });
+
+  it("validates lostReason as optional free text", () => {
+    expect(validateUpdateSalesOpportunityInput({ lostReason: "Budget too low" })).toEqual({ lostReason: "Budget too low" });
+    expect(validateUpdateSalesOpportunityInput({ lostReason: null })).toEqual({ lostReason: null });
+  });
+
+  it("returns an empty object for an empty/absent input", () => {
+    expect(validateUpdateSalesOpportunityInput({})).toEqual({});
+    expect(validateUpdateSalesOpportunityInput(null)).toEqual({});
   });
 });
