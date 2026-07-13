@@ -27,9 +27,8 @@ import { inboundCounts } from "@/lib/inbound/repository";
 import { listSalesOpportunities } from "@/lib/sales/repository";
 import { getOpportunityNextAction, isFollowUpOverdue, selectDueForFollowUp } from "@/lib/sales/pipeline";
 import type { SalesOpportunityRecord } from "@/lib/sales/types";
-import { listArArtists } from "@/lib/ar/repository";
-import { getArtistNextAction, isReviewOverdue, selectTodaysArFocus } from "@/lib/ar/pipeline";
-import type { ArArtistRecord } from "@/lib/ar/types";
+// A&R module is postponed — its Today's Focus integration (lib/ar/*) is intentionally not
+// wired in here. The module itself is untouched under app/control-center/ar and lib/ar.
 
 const metricIcons: Record<Metric["icon"], typeof Users> = {
   users: Users, activity: Activity, audio: AudioLines, click: MousePointerClick,
@@ -75,20 +74,6 @@ function SalesFollowUpRow({ opportunity, siteQuery, now }: { opportunity: SalesO
   );
 }
 
-function ArFocusRow({ artist, siteQuery, now }: { artist: ArArtistRecord; siteQuery: string; now: Date }) {
-  const overdue = isReviewOverdue(artist, now);
-  return (
-    <a href={`/control-center/ar/${artist.id}${siteQuery}`} className="flex items-center gap-4 rounded-xl p-3 transition hover:bg-white/[0.035]">
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-sky-300/8 text-[10px] font-bold uppercase text-sky-300">A&R</span>
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-slate-100">{artist.artistName}</p>
-        <p className="truncate text-xs text-slate-500">{getArtistNextAction(artist, now)}.</p>
-      </div>
-      {overdue && <span className="ml-auto shrink-0 rounded-full border border-red-400/25 bg-red-400/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-red-300">Overdue</span>}
-    </a>
-  );
-}
-
 function WaitingRow({ project }: { project: Project }) {
   return (
     <div className="flex items-center gap-4 rounded-xl p-3 transition hover:bg-white/[0.035]">
@@ -108,7 +93,7 @@ export default async function DashboardPage({ searchParams }: SitePageProps) {
   const site = getSiteConfig(requestedSite);
   const siteQuery = site.id === "jmt-music" ? "" : `?site=${site.id}`;
   const now = new Date();
-  const [projectsResult, inbound, salesResult, arResult] = await Promise.all([getPropertyProjects(site), inboundCounts(site.id), listSalesOpportunities(site), listArArtists(site)]);
+  const [projectsResult, inbound, salesResult] = await Promise.all([getPropertyProjects(site), inboundCounts(site.id), listSalesOpportunities(site)]);
   const projects = projectsResult.projects;
   const todaysFocus = selectTodaysFocus(projects);
   const waitingOn = selectWaitingOn(projects);
@@ -116,7 +101,6 @@ export default async function DashboardPage({ searchParams }: SitePageProps) {
   const totalActive = workload.reduce((sum, item) => sum + item.activeCount, 0);
   const zone = getWorkloadZone(totalActive);
   const salesFollowUps = selectDueForFollowUp(salesResult.opportunities, now);
-  const arFocus = selectTodaysArFocus(arResult.artists, now);
 
   return (
     <>
@@ -124,7 +108,6 @@ export default async function DashboardPage({ searchParams }: SitePageProps) {
       {site.supportMessage && <div className="mb-6 rounded-xl border border-amber-300/15 bg-amber-300/[0.055] px-4 py-3 text-xs leading-5 text-amber-100/75"><strong className="mr-2 text-amber-200">Prepared property:</strong>{site.supportMessage}</div>}
       {projectsResult.status === "error" && <div className="mb-6 rounded-xl border border-amber-300/15 bg-amber-300/[0.055] px-4 py-3 text-xs text-amber-100/75"><strong className="mr-2 text-amber-200">Projects unavailable:</strong>{projectsResult.detail}</div>}
       {salesResult.status === "error" && <div className="mb-6 rounded-xl border border-amber-300/15 bg-amber-300/[0.055] px-4 py-3 text-xs text-amber-100/75"><strong className="mr-2 text-amber-200">Sales unavailable:</strong>{salesResult.detail}</div>}
-      {arResult.status === "error" && <div className="mb-6 rounded-xl border border-amber-300/15 bg-amber-300/[0.055] px-4 py-3 text-xs text-amber-100/75"><strong className="mr-2 text-amber-200">A&R unavailable:</strong>{arResult.detail}</div>}
       {!inbound.configured && <div className="mb-6 rounded-xl border border-amber-300/15 bg-amber-300/[0.055] px-4 py-3 text-xs text-amber-100/75"><strong className="mr-2 text-amber-200">Inbound unavailable:</strong>Configure Supabase and apply the inbound migration to load live attention counts.</div>}
 
       <section className="mb-10">
@@ -137,11 +120,10 @@ export default async function DashboardPage({ searchParams }: SitePageProps) {
       <section>
         <SectionHeading title="Today's Focus" description="Active work that needs your attention next." />
         <AdminCard className="p-2">
-          {todaysFocus.length || salesFollowUps.length || arFocus.length ? (
+          {todaysFocus.length || salesFollowUps.length ? (
             <>
               {todaysFocus.map((project) => <FocusRow key={project.id} project={project} />)}
               {salesFollowUps.map((opportunity) => <SalesFollowUpRow key={opportunity.id} opportunity={opportunity} siteQuery={siteQuery} now={now} />)}
-              {arFocus.map((artist) => <ArFocusRow key={artist.id} artist={artist} siteQuery={siteQuery} now={now} />)}
             </>
           ) : (
             <p className="p-6 text-sm text-slate-500">Nothing needs attention right now.</p>

@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { BarChart3, Building2, DollarSign, FileText, Globe2, Inbox, LayoutDashboard, ListChecks, Menu, Music2, Search, Settings, Sprout, Telescope, X } from "lucide-react";
+import { BarChart3, Building2, DollarSign, FileText, Globe2, Inbox, LayoutDashboard, ListChecks, Menu, Music2, Search, Settings, Sprout, X } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { normalizeSiteId, siteRegistry } from "@/lib/control-center/site-registry";
 import type { NavigationItem } from "@/lib/control-center/types";
 
+// A&R module is postponed — nav entry intentionally removed. The routes, repository,
+// migration, and components under app/control-center/ar and lib/ar remain in place for
+// when it's revived.
 const navigation: NavigationItem[] = [
   { label: "Dashboard", href: "/control-center", icon: LayoutDashboard },
   { label: "Projects", href: "/control-center/projects", icon: ListChecks },
-  { label: "A&R", href: "/control-center/ar", icon: Telescope },
   { label: "Sales", href: "/control-center/sales", icon: DollarSign },
   { label: "Inbox", href: "/control-center/inbox", icon: Inbox },
   { label: "Beat Library", href: "/control-center/beats", icon: Music2 },
