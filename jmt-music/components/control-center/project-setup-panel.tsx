@@ -145,7 +145,7 @@ export function ProjectSetupPanel({
   };
 
   const copyLink = async (raw: string) => {
-    const url = typeof window !== "undefined" ? `${window.location.origin}/project-setup/${raw}` : `/project-setup/${raw}`;
+    const url = typeof window !== "undefined" ? `${window.location.origin}/portal/${raw}` : `/portal/${raw}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
@@ -265,11 +265,11 @@ function RevealedLinkCallout({
   onCopy: (raw: string) => void;
   onDismiss: () => void;
 }) {
-  const url = typeof window !== "undefined" ? `${window.location.origin}/project-setup/${rawToken}` : `/project-setup/${rawToken}`;
+  const url = typeof window !== "undefined" ? `${window.location.origin}/portal/${rawToken}` : `/portal/${rawToken}`;
   return (
     <div className="mt-4 rounded-xl border border-emerald-300/20 bg-emerald-300/[0.06] p-4">
-      <p className="text-sm font-semibold text-emerald-100">Private Setup link — shown once</p>
-      <p className="mt-1 text-xs text-emerald-100/70">Copy this now. It won&apos;t be shown again — if it&apos;s lost, reissue a new one (which invalidates this link).</p>
+      <p className="text-sm font-semibold text-emerald-100">Private client portal link — shown once</p>
+      <p className="mt-1 text-xs text-emerald-100/70">Copy this into your normal client email. It opens this Project&apos;s files and feedback area. If it&apos;s lost, reissue a new one, which invalidates the old link.</p>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
         <code className="flex-1 overflow-x-auto whitespace-nowrap rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-slate-200">{url}</code>
         <button type="button" onClick={() => onCopy(rawToken)} className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-emerald-300/40 bg-emerald-300/10 px-3 text-xs font-semibold text-emerald-100 hover:bg-emerald-300/20">
