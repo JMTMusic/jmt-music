@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft, CalendarClock } from "lucide-react";
 import { notFound } from "next/navigation";
 import { ProjectSetupPanel } from "@/components/control-center/project-setup-panel";
+import { PortalFilePanel } from "@/components/control-center/portal-file-panel";
 import { AdminCard, PageHeader, SectionHeading } from "@/components/control-center/ui";
 import { getControlCenterAccessStatus } from "@/lib/control-center/access";
 import { getPropertyClients } from "@/lib/control-center/client-repository";
@@ -11,6 +12,7 @@ import { getPropertyProjects } from "@/lib/control-center/project-repository";
 import type { SitePageProps } from "@/lib/control-center/types";
 import { getProjectSetupByProjectId } from "@/lib/project-setup/repository";
 import type { ProjectSetupRecord } from "@/lib/project-setup/types";
+import { getPortalFilesForProject } from "@/lib/client-portal/repository";
 
 type ProjectDetailPageProps = SitePageProps & { params: Promise<{ projectId: string }> };
 
@@ -25,11 +27,12 @@ export default async function ProjectDetailPage({ searchParams, params }: Projec
   const site = getSiteConfig(requestedSite);
   const siteQuery = site.id === "jmt-music" ? "" : `?site=${site.id}`;
 
-  const [projectsResult, clientsResult, access, setupResult] = await Promise.all([
+  const [projectsResult, clientsResult, access, setupResult, portalFilesResult] = await Promise.all([
     getPropertyProjects(site),
     getPropertyClients(site),
     getControlCenterAccessStatus(),
-    getProjectSetupByProjectId(site, projectId)
+    getProjectSetupByProjectId(site, projectId),
+    getPortalFilesForProject(projectId)
   ]);
 
   const project = projectsResult.projects.find((item) => item.id === projectId);
@@ -73,6 +76,13 @@ export default async function ProjectDetailPage({ searchParams, params }: Projec
             setup={setup}
             schemaUnavailable={schemaUnavailable}
           />
+        </AdminCard>
+      </section>
+
+      <section className="mt-8">
+        <SectionHeading title="Client Portal Files" description="Add owner-managed Google Drive links. Clients can view, download, comment, and approve through their private portal link." />
+        <AdminCard className="p-5">
+          <PortalFilePanel propertyId={site.id} projectId={project.id} files={portalFilesResult.files} canEdit={access.canCreate} schemaUnavailable={portalFilesResult.status === "error"} />
         </AdminCard>
       </section>
     </>
