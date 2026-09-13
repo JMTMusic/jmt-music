@@ -2,7 +2,22 @@ import "server-only";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getProjectSetupByRawToken } from "@/lib/project-setup/repository";
-import type { ClientPortalView, PortalApprovalStatus, PortalComment, PortalFile, PortalFileType } from "./types";
+import type { ClientPortalView, PortalApprovalStatus, PortalComment, PortalFile, PortalFileType, PortalStage, PortalStageName } from "./types";
+
+export const PORTAL_STAGE_NAMES: PortalStageName[] = ["production", "mixing", "mastering", "delivery"];
+const emptyStages = (): PortalStage[] => PORTAL_STAGE_NAMES.map((stage) => ({ stage, status: "not_started", clientNote: null, updatedAt: null }));
+
+export async function getPortalStagesForProject(projectId: string): Promise<{ status: "ready" | "error"; stages: PortalStage[] }> {
+  try {
+    const { data, error } = await createSupabaseAdminClient().from("project_portal_stages").select("stage,status,client_note,updated_at").eq("project_id", projectId);
+    if (error) return { status: "error", stages: emptyStages() };
+    const rows = data || [];
+    return { status: "ready", stages: emptyStages().map((fallback) => {
+      const row = rows.find((item) => item.stage === fallback.stage);
+      return row ? { stage: row.stage, status: row.status, clientNote: row.client_note, updatedAt: row.updated_at } : fallback;
+    }) };
+  } catch { return { status: "error", stages: emptyStages() }; }
+}
 
 type PortalResult =
   | { status: "found"; view: ClientPortalView }
@@ -76,7 +91,8 @@ export async function getClientPortalByToken(rawToken: unknown): Promise<PortalR
       })()
     }));
 
-    return { status: "found", view: { project: access.view.project, client: access.view.client, files: mapped } };
+    const stageResult = await getPortalStagesForProject(access.view.project.id);
+    return { status: "found", view: { project: access.view.project, client: access.view.client, files: mapped, stages: stageResult.stages } };
   } catch {
     return { status: "error", message: "The Client Portal is temporarily unavailable." };
   }

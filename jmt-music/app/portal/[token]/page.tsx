@@ -28,7 +28,12 @@ export default async function ClientPortalPage({ params }: { params: Promise<{ t
           <div className="flex flex-col items-end gap-3"><div className="flex items-center gap-2 text-xs text-emerald-300"><ShieldCheck className="h-4 w-4" />Private project access</div><a href={`/project-setup/${token}`} className="text-xs font-semibold text-sky-300 hover:text-sky-200">Open project setup →</a></div>
         </header>
 
-        <section className="py-8">
+      <section className="py-8">
+        <h2 className="text-xs font-bold uppercase tracking-[.16em] text-slate-500">Project progress</h2>
+        <div className="mt-4 grid gap-3 md:grid-cols-4">{view.stages.map((item) => <div key={item.stage} className="rounded-2xl border border-white/10 bg-[#101722] p-5"><p className="text-xs font-bold uppercase tracking-wider text-sky-300">{item.stage}</p><p className="mt-2 text-sm font-semibold capitalize text-slate-100">{item.status.replaceAll("_", " ")}</p>{item.clientNote && <p className="mt-2 text-xs leading-5 text-slate-400">{item.clientNote}</p>}</div>)}</div>
+      </section>
+
+      <section className="pb-8">
           <h2 className="text-xs font-bold uppercase tracking-[.16em] text-slate-500">Project files</h2>
           {view.files.length === 0 ? <div className="mt-4 rounded-2xl border border-white/10 bg-[#101722] p-8 text-slate-400">No files have been shared yet. JMT Music will add them here when they are ready.</div> : (
             <div className="mt-4 space-y-5">{view.files.map((file) => {
