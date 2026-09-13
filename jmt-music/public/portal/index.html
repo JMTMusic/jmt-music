@@ -1,0 +1,1116 @@
+<!--
+  JMT Music — client portal
+  ─────────────────────────────────────────────────────────────
+  Self-contained: one file, no build step, no dependencies.
+  Serves at /portal/ when this file sits at portal/index.html.
+
+  Sample data lives in the ARTISTS array near the top of the
+  script block — artists, their access codes, projects, songs.
+
+  NOT REAL AUTHENTICATION. The access codes are in this file, so
+  anyone who views source can read every one of them. Fine for a
+  prototype with invented artists; replace before real client
+  material goes in. See README-portal.md.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Client Portal — JMT Music</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap">
+<style>
+  /* ── Studio (dark) — the default, lifted from jmtmusic.studio ── */
+  :root{
+    --bg:#05070a;
+    --surface:#101722;
+    --surface-2:#1c2431;
+    --line:rgba(255,255,255,.16);
+    --line-strong:rgba(255,255,255,.28);
+    --text:#f4f7fb;
+    --muted:#aeb7c3;
+    --dim:#7c8794;
+    --blue:#60a5fa;
+    --blue-bright:#93c5fd;
+    --blue-wash:rgba(96,165,250,.12);
+    --on-accent:#04101f;
+    --ok:#5ecb9a;
+    --warn:#e6b465;
+    --wave-base:#3f4a58;
+    --track:rgba(255,255,255,.13);
+    --topbar:rgba(8,11,16,.88);
+    --pop-shadow:0 8px 26px rgba(0,0,0,.55);
+    --glow:radial-gradient(900px 500px at 72% -10%,rgba(96,165,250,.14),rgba(0,0,0,0) 66%);
+    --shadow:none;
+    --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+    --serif:Georgia,"Times New Roman",serif;
+    --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --r:6px;
+    --max:1320px;
+  }
+  /* ── Daylight (light) — opt-in via the toggle; Studio stays the default ── */
+  :root[data-theme="light"]{
+    --bg:#ffffff;
+    --surface:#e9eef5;
+    --surface-2:#d7e0ea;
+    --line:rgba(10,25,48,.16);
+    --line-strong:rgba(10,25,48,.30);
+    --text:#0b1420;
+    --muted:#4e5a68;
+    --dim:#77828f;
+    --blue:#2563eb;
+    --blue-bright:#1d4ed8;
+    --blue-wash:rgba(37,99,235,.08);
+    --on-accent:#ffffff;
+    --ok:#0f7a55;
+    --warn:#8a5f0c;
+    --wave-base:#c9d2de;
+    --track:rgba(10,25,48,.17);
+    --topbar:rgba(255,255,255,.92);
+    --pop-shadow:0 6px 20px rgba(10,25,48,.16);
+    --glow:radial-gradient(900px 500px at 72% -10%,rgba(37,99,235,.07),rgba(0,0,0,0) 66%);
+    --shadow:none;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:var(--sans);font-size:14px;line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:var(--glow);
+  }
+  .wrap{position:relative;z-index:1;max-width:var(--max);margin:0 auto;padding:0 20px 64px}
+  a{color:var(--blue-bright);text-decoration:none}
+  a:hover{text-decoration:underline}
+  button{font:inherit;color:inherit;cursor:pointer;background:none;border:none}
+  :focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:3px}
+  h1,h2,h3{font-family:var(--serif);font-weight:400;text-wrap:balance;margin:0}
+  .eyebrow{
+    font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);
+    font-weight:500;
+  }
+  .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:20;background:var(--topbar);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
+  }
+  .topbar-in{
+    max-width:var(--max);margin:0 auto;padding:12px 20px;
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  }
+  .mark{
+    width:26px;height:26px;border-radius:5px;display:grid;place-items:center;
+    background:var(--blue);color:var(--on-accent);font-family:var(--serif);font-size:11px;
+    letter-spacing:.04em;flex:none;
+  }
+  .brand{display:flex;align-items:center;gap:9px;color:inherit;text-decoration:none}
+  .brand:hover{text-decoration:none}
+  .brand:hover b{color:var(--blue-bright)}
+  .brand b{font-weight:600;letter-spacing:.14em;font-size:11.5px;text-transform:uppercase}
+  .topbar .who{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted)}
+  .avatar{
+    width:26px;height:26px;border-radius:50%;flex:none;display:grid;place-items:center;
+    background:var(--surface-2);border:1px solid var(--line-strong);
+    font-size:10.5px;font-weight:600;color:var(--blue-bright);letter-spacing:.02em;
+  }
+  .themetoggle{
+    display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;
+    border:1px solid var(--line-strong);color:var(--muted);font-size:11px;
+    letter-spacing:.1em;text-transform:uppercase;font-weight:500;
+  }
+  .themetoggle:hover{border-color:var(--blue);color:var(--blue-bright)}
+  .themetoggle svg{display:block}
+  .demo-flag{
+    font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--warn);
+    border:1px solid var(--line-strong);border-radius:4px;padding:3px 7px;
+    background:var(--surface-2);
+  }
+  .linkbtn{font-size:12.5px;color:var(--muted)}
+  .linkbtn:hover{color:var(--blue-bright)}
+
+  /* ---------- breadcrumb ---------- */
+  .crumb{
+    display:flex;align-items:center;gap:8px;padding:18px 0 0;
+    font-size:12.5px;color:var(--dim);flex-wrap:wrap;
+  }
+  .crumb button{color:var(--muted)}
+  .crumb button:hover{color:var(--blue-bright)}
+  .crumb span.sep{color:var(--line-strong)}
+
+  /* ---------- header ---------- */
+  .pagehead{padding:22px 0 22px;display:flex;gap:26px;align-items:flex-end;flex-wrap:wrap}
+  .pagehead h1{font-size:clamp(27px,4vw,40px);line-height:1.12}
+  .pagehead p{margin:7px 0 0;color:var(--muted);max-width:56ch}
+
+  /* ---------- sign in ---------- */
+  .signin{
+    position:relative;z-index:1;min-height:82vh;display:grid;place-items:center;padding:40px 20px;
+  }
+  .signin-card{
+    width:100%;max-width:400px;background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--r);padding:28px 26px 24px;
+  }
+  .signin-card .mark{width:34px;height:34px;font-size:13px;border-radius:7px;margin-bottom:16px}
+  .signin-card h1{font-size:25px;line-height:1.15}
+  .signin-card > p{margin:8px 0 20px;color:var(--muted);font-size:13px}
+  .seg{
+    display:flex;gap:2px;padding:3px;background:var(--surface-2);
+    border:1px solid var(--line);border-radius:var(--r);margin-bottom:18px;
+  }
+  .seg button{
+    flex:1;padding:7px 10px;border-radius:4px;font-size:12.5px;font-weight:500;color:var(--muted);
+  }
+  .seg button[aria-selected="true"]{background:var(--blue);color:var(--on-accent)}
+  .field{display:block;margin-bottom:12px}
+  .field .lab{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:6px;font-weight:500}
+  .field input{
+    width:100%;background:var(--surface-2);border:1px solid var(--line);color:var(--text);
+    border-radius:var(--r);padding:11px 12px;font-family:var(--mono);font-size:15px;
+    letter-spacing:.08em;
+  }
+  .field input::placeholder{color:var(--dim);letter-spacing:.04em}
+  .field input:focus{border-color:var(--blue);outline:none}
+  .signin .btn{width:100%;justify-content:center;text-align:center;margin-top:4px}
+  .err{
+    font-size:12.5px;color:var(--warn);margin:10px 0 0;min-height:18px;
+  }
+  .hint{
+    margin-top:18px;padding-top:14px;border-top:1px solid var(--line);
+    font-size:11.5px;color:var(--dim);line-height:1.7;
+  }
+  .hint code{font-family:var(--mono);color:var(--blue-bright);font-size:11.5px}
+
+  /* ---------- roster ---------- */
+  .attention{margin-bottom:26px}
+  .attention .row{
+    display:flex;gap:12px;align-items:center;padding:12px 14px;
+    background:var(--surface);border:1px solid var(--line);border-left:2px solid var(--warn);
+    border-radius:var(--r);width:100%;text-align:left;margin-top:8px;
+  }
+  .attention .row:hover{border-color:var(--line-strong);border-left-color:var(--warn)}
+  .attention .row .c{flex:1;min-width:0}
+  .attention .row b{font-weight:500;font-size:13.5px}
+  .attention .row span{display:block;font-size:12px;color:var(--dim)}
+  .attention .row .cta{font-size:12px;color:var(--blue-bright);white-space:nowrap}
+
+  .roster{
+    display:grid;gap:14px;
+    grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+  }
+  .artist{
+    display:flex;flex-direction:column;align-items:flex-start;gap:10px;text-align:left;
+    padding:18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+    position:relative;
+  }
+  .artist:hover{border-color:var(--blue)}
+  .artist .face{
+    width:48px;height:48px;border-radius:50%;display:grid;place-items:center;
+    background:var(--surface-2);border:1px solid var(--line-strong);
+    font-size:15px;font-weight:600;color:var(--blue-bright);letter-spacing:.03em;
+  }
+  .artist b{font-weight:450;font-size:15px;font-family:var(--serif)}
+  .artist .meta{font-size:11.5px;color:var(--dim)}
+  .artist .flag{
+    position:absolute;top:14px;right:14px;width:7px;height:7px;border-radius:50%;
+    background:var(--warn);
+  }
+
+  /* ---------- project cards ---------- */
+  .projgrid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+  .proj{
+    display:block;width:100%;text-align:left;padding:16px 17px;
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  }
+  .proj:hover{border-color:var(--blue)}
+  .proj .top{display:flex;gap:10px;align-items:baseline;margin-bottom:3px}
+  .proj h3{font-size:18px;flex:1;min-width:0}
+  .proj .sub{font-size:11.5px;color:var(--dim)}
+  .proj .mini{display:flex;gap:4px;margin:14px 0 9px}
+  .proj .mini i{flex:1;height:3px;border-radius:2px;background:var(--track)}
+  .proj .mini i.on{background:var(--blue)}
+  .proj .foot{display:flex;gap:8px;align-items:center;font-size:11.5px;color:var(--dim)}
+  .proj.done{opacity:.86}
+  .proj.done .mini i.on{background:var(--ok)}
+  .sectionhead{
+    display:flex;align-items:baseline;gap:10px;margin:30px 0 12px;
+  }
+  .sectionhead .eyebrow{flex:none}
+  .sectionhead .rule{flex:1;height:1px;background:var(--line)}
+
+  .codecard{
+    display:flex;gap:12px;align-items:center;flex-wrap:wrap;
+    padding:12px 14px;background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--r);margin-top:4px;
+  }
+  .codecard .k{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:500}
+  .codecard .v{font-family:var(--mono);font-size:15px;color:var(--blue-bright);letter-spacing:.08em}
+
+  /* ---------- layout ---------- */
+  .stages{display:flex;gap:0;flex-wrap:wrap;margin:4px 0 0;border-top:1px solid var(--line);padding-top:18px}
+  .stage{flex:1 1 140px;min-width:128px;padding-right:16px;position:relative}
+  .stage + .stage{border-left:1px solid var(--line);padding-left:16px}
+  .stage .bar{height:3px;border-radius:2px;background:var(--track);margin-bottom:9px}
+  .stage.done .bar{background:var(--blue)}
+  .stage.now .bar{background:linear-gradient(90deg,var(--blue) 60%,var(--track) 60%)}
+  .stage .name{font-size:12.5px;font-weight:500}
+  .stage .sub{font-size:11.5px;color:var(--dim)}
+  .stage.now .name{color:var(--blue-bright)}
+  .stage.todo .name{color:var(--dim)}
+
+  .grid{
+    display:grid;gap:18px;margin-top:26px;
+    grid-template-columns:214px minmax(0,1fr) 316px;align-items:start;
+  }
+  @media (max-width:1120px){.grid{grid-template-columns:200px minmax(0,1fr)}.thread{grid-column:1 / -1}}
+  @media (max-width:820px){.grid{grid-template-columns:1fr}}
+
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+  .panel-h{
+    padding:11px 14px;border-bottom:1px solid var(--line);
+    background:var(--surface-2);border-radius:var(--r) var(--r) 0 0;
+    display:flex;align-items:center;gap:8px;
+  }
+  .panel-h .eyebrow{flex:1}
+
+  /* ---------- track list ---------- */
+  .tracklist{padding:0}
+  .trk{
+    width:100%;text-align:left;display:flex;gap:10px;align-items:baseline;
+    padding:10px 13px;line-height:1.35;
+  }
+  .trk + .trk{border-top:1px solid var(--line)}
+  .trk:hover{background:var(--surface-2)}
+  .trk[aria-current="true"]{background:var(--blue-wash);box-shadow:inset 2px 0 0 var(--blue)}
+  .trk .n{font-size:11px;color:var(--dim);width:16px;flex:none}
+  .trk .t{flex:1;min-width:0}
+  .trk .t b{display:block;font-weight:450;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .trk .t span{font-size:11px;color:var(--dim)}
+  .dot{width:6px;height:6px;border-radius:50%;flex:none;align-self:center}
+  .dot.review{background:var(--warn)}
+  .dot.approved{background:var(--ok)}
+  .dot.queued{background:var(--dim);opacity:.6}
+
+  /* ---------- player ---------- */
+  .player{padding:16px 18px 18px}
+  .player-top{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:16px}
+  .player-top h2{font-size:21px;line-height:1.2}
+  .player-top .meta{font-size:11.5px;color:var(--dim);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap}
+  .chip{
+    font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;padding:3px 8px;
+    border:1px solid var(--line-strong);border-radius:4px;color:var(--muted);white-space:nowrap;
+  }
+  .chip.blue{color:var(--blue-bright)}
+  .chip.warn{color:var(--warn)}
+  .chip.ok{color:var(--ok)}
+  .chip.blue,.chip.warn,.chip.ok{border-color:color-mix(in srgb,currentColor 50%,transparent)}
+
+  .wavewrap{position:relative;padding-top:22px}
+  .pins{position:absolute;top:0;left:0;right:0;height:22px}
+  .pin{
+    position:absolute;transform:translateX(-50%);bottom:0;
+    display:flex;flex-direction:column;align-items:center;gap:0;
+  }
+  .pin button{
+    font-family:var(--mono);font-size:10px;padding:1px 5px;border-radius:3px;
+    background:var(--surface-2);border:1px solid var(--line-strong);color:var(--muted);
+    white-space:nowrap;
+  }
+  .pin button:hover,.pin.active button{border-color:var(--blue);color:var(--blue-bright)}
+  .pin i{display:block;width:1px;height:6px;background:var(--line-strong)}
+  .pin.active i{background:var(--blue)}
+
+  .notepop{
+    position:absolute;top:25px;z-index:6;width:max-content;
+    max-width:min(300px,calc(100% - 16px));
+    background:var(--surface-2);border:1px solid var(--line-strong);
+    border-radius:var(--r);padding:10px 26px 11px 12px;box-shadow:var(--pop-shadow);
+  }
+  .notepop .caret{
+    position:absolute;top:-5px;width:8px;height:8px;background:var(--surface-2);
+    border-left:1px solid var(--line-strong);border-top:1px solid var(--line-strong);
+    transform:rotate(45deg);
+  }
+  .notepop .hd{display:flex;gap:7px;align-items:center;margin-bottom:3px}
+  .notepop .hd b{font-size:12px;font-weight:500}
+  .notepop .hd .tc{font-family:var(--mono);font-size:10.5px;color:var(--blue-bright)}
+  .notepop p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5;overflow-wrap:anywhere}
+  .notepop .x{
+    position:absolute;top:5px;right:7px;width:18px;height:18px;line-height:1;
+    color:var(--dim);font-size:15px;display:grid;place-items:center;border-radius:3px;
+  }
+  .notepop .x:hover{color:var(--text);background:var(--blue-wash)}
+
+  .wave{
+    display:block;width:100%;height:96px;cursor:crosshair;
+    background:transparent;border:none;
+  }
+  #barsBase{fill:var(--wave-base)}
+  #barsPlayed{fill:var(--blue)}
+  #head{stroke:var(--blue-bright)}
+  .transport{display:flex;align-items:center;gap:14px;margin-top:12px;flex-wrap:wrap}
+  .play{
+    width:38px;height:38px;border-radius:50%;background:var(--blue);color:var(--on-accent);
+    display:grid;place-items:center;flex:none;
+  }
+  .play:hover{background:var(--blue-bright)}
+  .time{font-family:var(--mono);font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .time b{color:var(--text);font-weight:500}
+  .transport .spacer{flex:1}
+
+  .commentbar{display:flex;gap:8px;margin-top:14px;align-items:stretch;flex-wrap:wrap}
+  .tc-chip{
+    font-family:var(--mono);font-size:12px;display:flex;align-items:center;padding:0 10px;
+    border:1px solid color-mix(in srgb,var(--blue) 45%,transparent);color:var(--blue-bright);
+    border-radius:var(--r);background:var(--blue-wash);flex:none;
+  }
+  .commentbar input{
+    flex:1 1 180px;min-width:0;background:var(--surface-2);border:1px solid var(--line);
+    color:var(--text);border-radius:var(--r);padding:9px 11px;font:inherit;
+  }
+  .commentbar input::placeholder{color:var(--dim)}
+  .commentbar input:focus{border-color:var(--line-strong);outline:none}
+  .btn{
+    padding:9px 14px;border-radius:var(--r);border:1px solid var(--line-strong);
+    font-size:12.5px;font-weight:500;white-space:nowrap;
+  }
+  .btn:hover{border-color:var(--blue);color:var(--blue-bright)}
+  .btn.primary{background:var(--blue);color:var(--on-accent);border-color:var(--blue)}
+  .btn.primary:hover{background:var(--blue-bright);color:var(--on-accent);border-color:var(--blue-bright)}
+
+  /* ---------- files ---------- */
+  .files{margin-top:18px}
+  .file{
+    display:flex;gap:12px;align-items:center;padding:11px 14px;
+    border-top:1px solid var(--line);
+  }
+  .file:first-of-type{border-top:none}
+  .file .ic{
+    width:28px;height:28px;border-radius:5px;flex:none;display:grid;place-items:center;
+    background:var(--surface-2);border:1px solid var(--line);color:var(--dim);
+    font-family:var(--mono);font-size:9px;letter-spacing:.02em;
+  }
+  .file .nm{flex:1;min-width:0}
+  .file .nm b{display:block;font-weight:450;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .file .nm span{font-size:11.5px;color:var(--dim)}
+  .file .act{font-size:12px;color:var(--blue-bright);white-space:nowrap}
+
+  /* ---------- thread ---------- */
+  .thread .body{padding:0 14px;display:flex;flex-direction:column;gap:0;max-height:560px;overflow-y:auto}
+  .msg{display:flex;gap:10px;padding:13px 0}
+  .msg + .msg{border-top:1px solid var(--line)}
+  .msg .avatar{width:24px;height:24px;font-size:9.5px}
+  .msg .c{flex:1;min-width:0}
+  .msg .hd{display:flex;gap:7px;align-items:baseline;flex-wrap:wrap}
+  .msg .hd b{font-size:12.5px;font-weight:500}
+  .msg .hd time{font-size:10.5px;color:var(--dim);font-family:var(--mono)}
+  .msg p{margin:3px 0 0;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+  .msg.note .c{border-left:2px solid var(--blue);padding-left:10px}
+  .msg .at{
+    font-family:var(--mono);font-size:10.5px;color:var(--blue-bright);
+    border:1px solid color-mix(in srgb,var(--blue) 40%,transparent);border-radius:3px;padding:0 4px;
+  }
+  .composer{border-top:1px solid var(--line);padding:12px;display:flex;gap:8px}
+  .composer input{
+    flex:1;min-width:0;background:var(--surface-2);border:1px solid var(--line);
+    color:var(--text);border-radius:var(--r);padding:9px 11px;font:inherit;
+  }
+  .composer input::placeholder{color:var(--dim)}
+  .composer input:focus{border-color:var(--line-strong);outline:none}
+
+  .foot{
+    margin-top:34px;border-top:1px solid var(--line);padding-top:16px;
+    color:var(--dim);font-size:12px;display:flex;gap:14px;justify-content:space-between;flex-wrap:wrap;
+  }
+  .empty{color:var(--dim);font-size:13px;padding:6px 0}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ══════════ sample roster ══════════
+   Everything here is made up so the prototype has something real-shaped to show. */
+
+const STAGES = ["Production","Mixing","Mastering","Delivery"];
+
+const t = (title,dur,version,status,bpm,key,updated,comments,messages) =>
+  ({title,dur,version,status,bpm,key,updated,comments:comments||[],messages:messages||[]});
+
+const ARTISTS = [
+  {
+    id:"nora", name:"Nora Vance", initials:"NV", code:"GHOST-2416", since:"Client since 2024",
+    projects:[
+      {
+        id:"ghost-light", title:"Ghost Light", kind:"EP", state:"active", stage:1,
+        updated:"Updated 2 days ago", note:"In progress — rev 2 of 3",
+        tracks:[
+          t("Ghost Light",222,"Mix v3","review","72 BPM","F minor","Updated 2 days ago",
+            [
+              {ti:14, who:"NV", name:"Nora Vance", text:"Love how the intro sits. Don't touch this part."},
+              {ti:68, who:"NV", name:"Nora Vance", text:"Vocal feels buried under the pad through the pre-chorus."},
+              {ti:134,who:"JT", name:"Jonathan",   text:"Pulled the pad down 2dB here and carved 400Hz. Listen again?"}
+            ],
+            [
+              {who:"JT",name:"Jonathan",when:"Mon 9:12 AM",text:"v3 is up. I rode the vocal harder in the second verse and printed it with the tape emulation you liked on the demo."},
+              {who:"NV",name:"Nora Vance",when:"Mon 6:40 PM",text:"Listening on the car speakers tonight, will leave notes on the spots that bug me."}
+            ]),
+          t("Slow Weather",198,"Mix v1","review","88 BPM","D major","Updated 5 days ago",
+            [{ti:41,who:"NV",name:"Nora Vance",text:"Snare is too polite. Can it hit harder from here on?"}],
+            [{who:"JT",name:"Jonathan",when:"Thu 2:05 PM",text:"First pass at the mix. Drums are deliberately restrained — tell me if you want them bigger."}]),
+          t("Cedar & Smoke",245,"Mix v2","approved","64 BPM","A minor","Approved last week",
+            [{ti:102,who:"NV",name:"Nora Vance",text:"This is the one. Approved."}],
+            [{who:"NV",name:"Nora Vance",when:"Tue 11:30 AM",text:"Approved — send it to mastering whenever you're ready."}]),
+          t("Hold the Line Open",176,"Rough","queued","96 BPM","G major","Awaiting keys overdub",[],
+            [{who:"JT",name:"Jonathan",when:"Fri 4:18 PM",text:"Holding this one until we cut the Rhodes part on Thursday."}]),
+          t("Every Room You Left",210,"Rough","queued","78 BPM","C minor","Not started")
+        ]
+      },
+      {
+        id:"paper-city", title:"Paper City", kind:"Single", state:"done", stage:4,
+        updated:"Delivered March 2026", note:"Masters + stems delivered",
+        tracks:[ t("Paper City",203,"Master","approved","104 BPM","E major","Delivered 12 Mar 2026",[],
+          [{who:"NV",name:"Nora Vance",when:"12 Mar",text:"Sounds incredible. Thank you for the patience on this one."}]) ]
+      }
+    ]
+  },
+  {
+    id:"marcus", name:"Marcus Lail", initials:"ML", code:"RIVER-8830", since:"Client since 2025",
+    projects:[
+      {
+        id:"long-river", title:"Long River", kind:"Album", state:"active", stage:0,
+        updated:"Updated yesterday", note:"Tracking — 4 of 11 songs cut",
+        tracks:[
+          t("Long River",268,"Rough","review","61 BPM","B♭ major","Updated yesterday",
+            [{ti:95,who:"ML",name:"Marcus Lail",text:"Second verse feels like it drags. Shorter?"}],
+            [{who:"ML",name:"Marcus Lail",when:"Tue 8:02 AM",text:"Rough from the session — curious what you think of the tempo."}]),
+          t("Coal & Copper",214,"Rough","queued","80 BPM","E minor","Tracked, not mixed"),
+          t("Waverly",189,"Rough","queued","92 BPM","A major","Tracked, not mixed"),
+          t("The Quiet Part",232,"Rough","queued","70 BPM","D minor","Tracked, not mixed")
+        ]
+      }
+    ]
+  },
+  {
+    id:"bright", name:"The Bright Hours", initials:"BH", code:"HOURS-5192", since:"Client since 2023",
+    projects:[
+      {
+        id:"attic-sessions", title:"Attic Sessions", kind:"EP", state:"active", stage:2,
+        updated:"Updated 4 days ago", note:"Mastering — 3 of 4 done",
+        tracks:[
+          t("Attic Light",194,"Master v1","review","118 BPM","C major","Updated 4 days ago",
+            [{ti:22,who:"BH",name:"Dana (Bright Hours)",text:"Is the top end a touch bright here, or is that just my headphones?"}],
+            [{who:"JT",name:"Jonathan",when:"Sat 1:40 PM",text:"Masters for the first three are up. Fourth is waiting on the mix approval."}]),
+          t("Sparrow",176,"Master v1","approved","128 BPM","G major","Approved 4 days ago"),
+          t("Nine Summers",221,"Master v1","approved","96 BPM","F major","Approved 4 days ago"),
+          t("Carry It Down",240,"Mix v2","review","74 BPM","A minor","Waiting on your approval")
+        ]
+      },
+      {
+        id:"first-light", title:"First Light", kind:"Single", state:"done", stage:4,
+        updated:"Delivered January 2026", note:"Masters + stems delivered",
+        tracks:[ t("First Light",228,"Master","approved","112 BPM","D major","Delivered 18 Jan 2026") ]
+      }
+    ]
+  },
+  {
+    id:"sable", name:"Sable Drift", initials:"SD", code:"DRIFT-7045", since:"Client since 2026",
+    projects:[
+      {
+        id:"undertow", title:"Undertow", kind:"Single", state:"active", stage:3,
+        updated:"Updated today", note:"Delivery — sending stems today",
+        tracks:[ t("Undertow",256,"Master","approved","86 BPM","F♯ minor","Approved today",[],
+          [{who:"JT",name:"Jonathan",when:"Today 10:15 AM",text:"Master's approved. Stems and the instrumental go out this afternoon."}]) ]
+      }
+    ]
+  },
+  {
+    id:"june", name:"June Reyes", initials:"JR", code:"REYES-3318", since:"Client since 2024",
+    projects:[
+      {
+        id:"kitchen-tapes", title:"Kitchen Tapes", kind:"EP", state:"done", stage:4,
+        updated:"Delivered November 2025", note:"Masters + stems delivered",
+        tracks:[
+          t("Kitchen Tapes",187,"Master","approved","90 BPM","C major","Delivered 4 Nov 2025"),
+          t("Two Chairs",205,"Master","approved","76 BPM","G minor","Delivered 4 Nov 2025"),
+          t("Back Porch",166,"Master","approved","108 BPM","D major","Delivered 4 Nov 2025")
+        ]
+      }
+    ]
+  }
+];
+
+const STUDIO_CODE = "4821";
+const STATUS_LABEL = {review:["warn","Needs your ears"], approved:["ok","Approved"], queued:["","Queued"]};
+
+/* ══════════ tiny helpers ══════════ */
+const $ = id => document.getElementById(id);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt = s => { const v = Math.max(0, Number(s) || 0); return Math.floor(v/60) + ":" + String(Math.floor(v%60)).padStart(2,"0"); };
+const artistById = id => ARTISTS.find(a => a.id === id);
+const projectById = (a,pid) => a && a.projects.find(p => p.id === pid);
+const needsStudio = p => p.state === "active" &&
+  p.tracks.filter(tr => tr.status === "review" && tr.comments.some(c => c.who !== "JT")).length;
+
+/* ══════════ app state ══════════ */
+let S = {view:"signin", role:null, artistId:null, projectId:null, tab:"studio"};
+try {
+  const saved = JSON.parse(localStorage.getItem("jmt-session") || "null");
+  if(saved && saved.role) S = Object.assign(S, saved, {view: saved.role === "admin" ? "roster" : "projects"});
+} catch(e){}
+function saveSession(){
+  try {
+    if(S.role) localStorage.setItem("jmt-session", JSON.stringify({role:S.role, artistId:S.artistId}));
+    else localStorage.removeItem("jmt-session");
+  } catch(e){}
+}
+
+/* player state (project view only) */
+let active = null, time = 0, playing = false, raf = null, last = 0, activePin = null, project = null;
+
+/* ══════════ chrome ══════════ */
+function topbar(){
+  const a = artistById(S.artistId);
+  const who = S.role === "admin"
+    ? `<span>Jonathan · Studio</span><span class="avatar">JT</span>`
+    : `<span>${esc(a ? a.name : "")}</span><span class="avatar">${esc(a ? a.initials : "")}</span>`;
+  return `<div class="topbar"><div class="topbar-in">
+    <a class="brand" href="/" title="Back to jmtmusic.studio"><span class="mark">JMT</span><b>JMT Music</b></a>
+    <span class="demo-flag">Prototype · sample data</span>
+    <div class="who">
+      <button class="themetoggle" id="themeBtn" type="button" aria-label="Switch appearance">
+        <svg id="themeIcon" width="13" height="13" viewBox="0 0 16 16" fill="none"
+             stroke="currentColor" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"></svg>
+        <span id="themeLabel">Daylight</span>
+      </button>
+      ${who}
+      <button class="linkbtn" id="signout">Sign out</button>
+    </div>
+  </div></div>`;
+}
+
+function crumbs(parts){
+  return `<nav class="crumb">` + parts.map((p,i) =>
+    (i ? `<span class="sep">/</span>` : "") +
+    (p.go ? `<button data-go="${p.go}">${esc(p.label)}</button>` : `<span>${esc(p.label)}</span>`)
+  ).join("") + `</nav>`;
+}
+
+/* ══════════ view: sign in ══════════ */
+function viewSignin(){
+  const studio = S.tab === "studio";
+  return `<div class="signin"><div class="signin-card">
+    <span class="mark">JMT</span>
+    <h1>${studio ? "Studio sign-in" : "Your project portal"}</h1>
+    <p>${studio
+      ? "Everything you're working on, by artist."
+      : "Enter the code Jonathan sent you to open your songs."}</p>
+    <div class="seg" role="tablist">
+      <button role="tab" aria-selected="${studio}" data-tab="studio">Studio</button>
+      <button role="tab" aria-selected="${!studio}" data-tab="artist">Artist</button>
+    </div>
+    <form id="signinForm">
+      <label class="field">
+        <span class="lab">${studio ? "Studio passcode" : "Access code"}</span>
+        <input id="codeInput" autocomplete="off" spellcheck="false"
+               placeholder="${studio ? "••••" : "ARTIST-0000"}"
+               aria-label="${studio ? "Studio passcode" : "Artist access code"}">
+      </label>
+      <p class="err" id="signinErr"></p>
+      <button class="btn primary" type="submit">${studio ? "Open the studio" : "Open my portal"}</button>
+    </form>
+    <div class="hint">
+      Prototype — no real accounts yet. Try <code>${STUDIO_CODE}</code> for the studio,
+      or <code>GHOST-2416</code> / <code>HOURS-5192</code> as an artist.
+      <br><a href="/" style="color:var(--muted)">&larr; Back to jmtmusic.studio</a>
+    </div>
+  </div></div>`;
+}
+
+function wireSignin(){
+  document.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => {
+    S.tab = b.dataset.tab; render();
+  });
+  $("signinForm").onsubmit = e => {
+    e.preventDefault();
+    const v = $("codeInput").value.trim().toUpperCase();
+    if(S.tab === "studio"){
+      if(v === STUDIO_CODE){ S.role = "admin"; S.view = "roster"; saveSession(); render(); return; }
+      $("signinErr").textContent = "That passcode doesn't match.";
+    } else {
+      const a = ARTISTS.find(x => x.code === v);
+      if(a){ S.role = "artist"; S.artistId = a.id; S.view = "projects"; saveSession(); render(); return; }
+      $("signinErr").textContent = "No project found for that code. Check it with Jonathan.";
+    }
+    $("codeInput").focus(); $("codeInput").select();
+  };
+  $("codeInput").focus();
+}
+
+/* ══════════ view: artist roster (admin) ══════════ */
+function viewRoster(){
+  const flagged = [];
+  ARTISTS.forEach(a => a.projects.forEach(p => {
+    const n = needsStudio(p);
+    if(n) flagged.push({a, p, n});
+  }));
+
+  return topbar() + `<div class="wrap">
+    <header class="pagehead">
+      <div>
+        <div class="eyebrow">${ARTISTS.length} artists · ${ARTISTS.reduce((n,a)=>n+a.projects.filter(p=>p.state==="active").length,0)} active projects</div>
+        <h1>Who needs you today.</h1>
+      </div>
+    </header>
+
+    <section class="attention">
+      <div class="eyebrow">Waiting on you</div>
+      ${flagged.length ? flagged.map(f => `
+        <button class="row" data-artist="${f.a.id}" data-project="${f.p.id}">
+          <span class="avatar">${esc(f.a.initials)}</span>
+          <span class="c">
+            <b>${esc(f.p.title)} — ${esc(f.a.name)}</b>
+            <span>${f.n} song${f.n>1?"s":""} with notes you haven't answered</span>
+          </span>
+          <span class="cta">Open →</span>
+        </button>`).join("")
+      : `<p class="empty">Nothing outstanding. Every note has a reply.</p>`}
+    </section>
+
+    <div class="sectionhead"><span class="eyebrow">Artists</span><span class="rule"></span></div>
+    <div class="roster">
+      ${ARTISTS.map(a => {
+        const act = a.projects.filter(p => p.state === "active").length;
+        const done = a.projects.filter(p => p.state === "done").length;
+        const flag = a.projects.some(p => needsStudio(p));
+        return `<button class="artist" data-artist="${a.id}">
+          ${flag ? `<span class="flag" title="Waiting on you"></span>` : ""}
+          <span class="face">${esc(a.initials)}</span>
+          <b>${esc(a.name)}</b>
+          <span class="meta">${act} active · ${done} delivered<br>${esc(a.since)}</span>
+        </button>`;
+      }).join("")}
+    </div>
+
+    <div class="foot"><span>JMT Music · client portal prototype</span><span class="mono">Sample data</span></div>
+  </div>`;
+}
+
+/* ══════════ view: an artist's projects ══════════ */
+function viewProjects(){
+  const a = artistById(S.artistId);
+  if(!a) return viewRoster();
+  const current = a.projects.filter(p => p.state === "active");
+  const past = a.projects.filter(p => p.state === "done");
+  const mine = S.role === "artist";
+
+  const card = p => `<button class="proj ${p.state === "done" ? "done" : ""}" data-project="${p.id}">
+      <span class="top"><h3>${esc(p.title)}</h3><span class="sub">${esc(p.kind)}</span></span>
+      <span class="sub">${p.tracks.length} song${p.tracks.length>1?"s":""} · ${esc(p.note)}</span>
+      <span class="mini">${STAGES.map((_,i) => `<i class="${i <= p.stage - (p.state==="done"?0:1) || (p.state==="done") ? "on" : ""}"></i>`).join("")}</span>
+      <span class="foot" style="margin:0;border:none;padding:0">
+        <span>${esc(p.updated)}</span>
+        ${needsStudio(p) && !mine ? `<span class="chip warn">Needs you</span>` : ""}
+      </span>
+    </button>`;
+
+  return topbar() + `<div class="wrap">
+    ${S.role === "admin" ? crumbs([{label:"Artists", go:"roster"},{label:a.name}]) : ""}
+    <header class="pagehead">
+      <div>
+        <div class="eyebrow">${mine ? "Your portal" : esc(a.since)}</div>
+        <h1>${mine ? "Your records with JMT." : esc(a.name)}</h1>
+        ${mine ? `<p>Open a project to hear the current mix and leave notes at the exact second you mean.</p>` : ""}
+      </div>
+    </header>
+
+    ${S.role === "admin" ? `<div class="codecard">
+      <span class="k">Their access code</span><span class="v">${esc(a.code)}</span>
+      <span style="font-size:11.5px;color:var(--dim)">Send this to ${esc(a.name.split(" ")[0])} — it's all they need to sign in.</span>
+    </div>` : ""}
+
+    <div class="sectionhead"><span class="eyebrow">Current</span><span class="rule"></span></div>
+    <div class="projgrid">${current.length ? current.map(card).join("") : `<p class="empty">Nothing in progress right now.</p>`}</div>
+
+    <div class="sectionhead"><span class="eyebrow">Delivered</span><span class="rule"></span></div>
+    <div class="projgrid">${past.length ? past.map(card).join("") : `<p class="empty">Nothing delivered yet.</p>`}</div>
+
+    <div class="foot"><span>JMT Music · client portal prototype</span><span class="mono">Sample data</span></div>
+  </div>`;
+}
+
+/* ══════════ view: one project (the mix room) ══════════ */
+function viewProject(){
+  const a = artistById(S.artistId);
+  project = projectById(a, S.projectId);
+  if(!project) return viewProjects();
+  active = project.tracks[0]; time = 0; activePin = null;
+  const mine = S.role === "artist";
+
+  return topbar() + `<div class="wrap">
+    ${crumbs(S.role === "admin"
+      ? [{label:"Artists", go:"roster"},{label:a.name, go:"projects"},{label:project.title}]
+      : [{label:"Your projects", go:"projects"},{label:project.title}])}
+
+    <header class="pagehead">
+      <div>
+        <div class="eyebrow">${esc(a.name)} · ${esc(project.kind)} · ${project.tracks.length} song${project.tracks.length>1?"s":""}</div>
+        <h1>${mine ? "Everything for this record, in one place." : esc(project.title)}</h1>
+        ${mine ? `<p>Play the current mix, drop a note at the exact second you mean, and see what I'm working on next.</p>` : ""}
+      </div>
+    </header>
+
+    <div class="stages" id="stages"></div>
+
+    <div class="grid">
+      <section class="panel">
+        <div class="panel-h"><span class="eyebrow">Songs</span><span class="mono" style="font-size:11px;color:var(--dim)" id="trkCount"></span></div>
+        <div class="tracklist" id="tracklist"></div>
+      </section>
+
+      <div>
+        <section class="panel player">
+          <div class="player-top">
+            <div style="flex:1;min-width:180px">
+              <h2 id="trkTitle"></h2>
+              <div class="meta" id="trkMeta"></div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap" id="trkChips"></div>
+          </div>
+
+          <div class="wavewrap">
+            <div class="pins" id="pins"></div>
+            <svg class="wave" id="wave" preserveAspectRatio="none" viewBox="0 0 1000 100" aria-label="Waveform — click to scrub">
+              <defs><clipPath id="played"><rect id="playedRect" x="0" y="0" width="0" height="100"></rect></clipPath></defs>
+              <g id="barsBase"></g>
+              <g id="barsPlayed" clip-path="url(#played)"></g>
+              <line id="head" x1="0" y1="0" x2="0" y2="100" stroke-width="1.5"></line>
+            </svg>
+          </div>
+
+          <div class="transport">
+            <button class="play" id="play" aria-label="Play">
+              <svg width="13" height="14" viewBox="0 0 13 14" aria-hidden="true"><path id="playIcon" d="M1 1l11 6-11 6z" fill="currentColor"></path></svg>
+            </button>
+            <span class="time"><b id="cur">0:00</b> <span style="color:var(--dim)">/</span> <span id="dur">0:00</span></span>
+            <span class="spacer"></span>
+            <button class="btn" id="approve"></button>
+          </div>
+
+          <div class="commentbar">
+            <span class="tc-chip" id="tcChip">0:00</span>
+            <input id="noteInput" placeholder="Note at this timecode — e.g. vocal feels buried here" aria-label="Add a timestamped note">
+            <button class="btn primary" id="addNote">Add note</button>
+          </div>
+        </section>
+
+        <section class="panel files">
+          <div class="panel-h">
+            <span class="eyebrow">Files</span>
+            <span style="font-size:11.5px;color:var(--dim)">Synced from Google Drive</span>
+          </div>
+          <div id="filelist"></div>
+        </section>
+      </div>
+
+      <section class="panel thread">
+        <div class="panel-h"><span class="eyebrow">Activity</span><span style="font-size:11.5px;color:var(--dim)" id="threadFor"></span></div>
+        <div class="body" id="thread"></div>
+        <form class="composer" id="msgForm">
+          <input id="msgInput" placeholder="${mine ? "Message Jonathan…" : "Reply to " + esc(a.name.split(" ")[0]) + "…"}" aria-label="Send a message">
+          <button class="btn" type="submit">Send</button>
+        </form>
+      </section>
+    </div>
+
+    <div class="foot">
+      <span>JMT Music · client portal prototype</span>
+      <span class="mono">Sample data — playback is simulated</span>
+    </div>
+  </div>`;
+}
+
+/* ── project view internals ── */
+function filesFor(track){
+  return [
+    {ext:"WAV", name:`${project.title} — ${track.title} ${track.version}.wav`, meta:"48 kHz / 24-bit · 61.2 MB · 2 days ago", act:"Play"},
+    {ext:"MP3", name:`${project.title} — ${track.title} (ref).mp3`, meta:"320 kbps · 5.4 MB · 2 days ago", act:"Download"},
+    {ext:"ZIP", name:`${project.title} — Stems (14 files).zip`, meta:"Drive folder · 1.8 GB · 2 days ago", act:"Open in Drive"},
+    {ext:"PDF", name:`${project.title} — Session notes.pdf`, meta:"3 pages · 240 KB · 1 week ago", act:"View"}
+  ];
+}
+
+function renderStages(){
+  $("stages").innerHTML = STAGES.map((name,i) => {
+    const cls = project.state === "done" || i < project.stage ? "done" : i === project.stage ? "now" : "todo";
+    const sub = project.state === "done" ? "Complete"
+      : i < project.stage ? "Done" : i === project.stage ? project.note : "Not started";
+    return `<div class="stage ${cls}"><div class="bar"></div>
+      <div class="name">${name}</div><div class="sub">${esc(sub)}</div></div>`;
+  }).join("");
+}
+
+function buildWave(track){
+  const N = 150;
+  let seed = [...(project.id + track.title)].reduce((a,c) => a + c.charCodeAt(0), 0);
+  const rnd = () => (seed = (seed*1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  let html = "";
+  for(let i=0;i<N;i++){
+    const p = i/N;
+    const env = 0.30 + 0.55*Math.sin(Math.PI*Math.min(1,p*1.15)) + 0.18*Math.sin(p*Math.PI*6);
+    const h = Math.max(5, Math.min(96, (env * (0.55 + 0.65*rnd())) * 92));
+    const x = (i/N)*1000 + 1.2, w = 1000/N - 2.4;
+    html += `<rect x="${x.toFixed(2)}" y="${((100-h)/2).toFixed(2)}" width="${w.toFixed(2)}" height="${h.toFixed(2)}" rx="1"></rect>`;
+  }
+  $("barsBase").innerHTML = html; $("barsPlayed").innerHTML = html;
+}
+
+function renderTracks(){
+  $("trkCount").textContent = project.tracks.length;
+  $("tracklist").innerHTML = project.tracks.map((tr,i) => `
+    <button class="trk" data-i="${i}" aria-current="${tr === active}">
+      <span class="n mono">${String(i+1).padStart(2,"0")}</span>
+      <span class="t"><b>${esc(tr.title)}</b><span>${esc(tr.version)} · ${fmt(tr.dur)}</span></span>
+      <span class="dot ${tr.status}" title="${STATUS_LABEL[tr.status][1]}"></span>
+    </button>`).join("");
+  $("tracklist").querySelectorAll(".trk").forEach(b => b.onclick = () => selectTrack(+b.dataset.i));
+}
+
+function renderHeader(){
+  $("trkTitle").textContent = active.title;
+  $("trkMeta").innerHTML = `<span>${esc(active.bpm)}</span><span>·</span><span>${esc(active.key)}</span><span>·</span><span>${esc(active.updated)}</span>`;
+  const [cls,label] = STATUS_LABEL[active.status];
+  $("trkChips").innerHTML = `<span class="chip blue">${esc(active.version)}</span><span class="chip ${cls}">${label}</span>`;
+  $("dur").textContent = fmt(active.dur);
+  $("threadFor").textContent = active.title;
+  $("approve").textContent = active.status === "approved" ? "Approved ✓" : "Approve this mix";
+}
+
+function renderPins(){
+  $("pins").innerHTML = active.comments.map((c,i) => {
+    const left = (c.ti/active.dur)*100;
+    return `<div class="pin ${activePin===i?"active":""}" style="left:${left}%" data-i="${i}">
+      <button aria-label="Note at ${fmt(c.ti)} from ${esc(c.name)}">${fmt(c.ti)}</button><i></i></div>`;
+  }).join("");
+  $("pins").querySelectorAll(".pin").forEach(p => {
+    p.querySelector("button").onclick = e => {
+      e.stopPropagation();
+      const i = +p.dataset.i;
+      if(activePin === i){ closeNote(); return; }
+      time = active.comments[i].ti; paint(); openNote(i);
+    };
+  });
+}
+
+function closeNote(){
+  const el = document.getElementById("notepop");
+  if(el) el.remove();
+  activePin = null;
+  if($("pins")) renderPins();
+}
+function openNote(i){
+  const el = document.getElementById("notepop");
+  if(el) el.remove();
+  const c = active.comments[i];
+  if(!c) return;
+  activePin = i; renderPins();
+  const wrap = document.querySelector(".wavewrap");
+  const pop = document.createElement("div");
+  pop.className = "notepop"; pop.id = "notepop";
+  pop.innerHTML = `<span class="caret"></span>
+    <button class="x" type="button" aria-label="Close note">&times;</button>
+    <div class="hd">
+      <span class="avatar" style="width:20px;height:20px;font-size:9px">${esc(c.who)}</span>
+      <b>${esc(c.name)}</b><span class="tc">${fmt(c.ti)}</span>
+    </div>
+    <p>${esc(c.text)}</p>`;
+  wrap.appendChild(pop);
+  const W = wrap.clientWidth, x = (c.ti/active.dur)*W, w = pop.offsetWidth;
+  const left = Math.min(Math.max(x - w/2, 2), Math.max(2, W - w - 2));
+  pop.style.left = left + "px";
+  pop.querySelector(".caret").style.left = Math.min(Math.max(x - left - 4, 10), Math.max(10, w - 18)) + "px";
+  pop.querySelector(".x").onclick = e => { e.stopPropagation(); closeNote(); };
+  pop.onclick = e => e.stopPropagation();
+}
+
+function renderThread(){
+  const items = [
+    ...active.messages.map(m => ({...m, kind:"msg"})),
+    ...active.comments.map((c,i) => ({who:c.who, name:c.name, text:c.text, kind:"note", ti:c.ti, i}))
+  ];
+  $("thread").innerHTML = items.length ? items.map(m => `
+    <div class="msg ${m.kind === "note" ? "note" : ""}">
+      <span class="avatar">${esc(m.who)}</span>
+      <div class="c">
+        <div class="hd"><b>${esc(m.name)}</b>
+          ${m.kind === "note" ? `<span class="at" data-t="${m.ti}">@ ${fmt(m.ti)}</span>` : `<time>${esc(m.when)}</time>`}
+        </div>
+        <p>${esc(m.text)}</p>
+      </div>
+    </div>`).join("")
+    : `<p class="empty" style="margin:0;padding:14px 0">Nothing here yet. Notes left on the waveform show up in this column.</p>`;
+  $("thread").querySelectorAll(".at").forEach(el => {
+    el.style.cursor = "pointer";
+    el.onclick = e => {
+      e.stopPropagation();
+      const i = active.comments.findIndex(c => c.ti === +el.dataset.t);
+      time = +el.dataset.t; paint();
+      if(i > -1) openNote(i);
+    };
+  });
+}
+
+function renderFiles(){
+  $("filelist").innerHTML = filesFor(active).map(f => `
+    <div class="file">
+      <span class="ic">${f.ext}</span>
+      <span class="nm"><b>${esc(f.name)}</b><span>${esc(f.meta)}</span></span>
+      <span class="act">${f.act}</span>
+    </div>`).join("");
+}
+
+function paint(){
+  const p = Math.max(0, Math.min(1, time/active.dur));
+  $("playedRect").setAttribute("width", (p*1000).toFixed(1));
+  $("head").setAttribute("x1", (p*1000).toFixed(1));
+  $("head").setAttribute("x2", (p*1000).toFixed(1));
+  $("cur").textContent = fmt(time);
+  $("tcChip").textContent = fmt(time);
+}
+
+function selectTrack(i){
+  active = project.tracks[i];
+  time = 0; closeNote(); stop();
+  buildWave(active); renderTracks(); renderHeader(); renderPins(); renderThread(); renderFiles(); paint();
+}
+
+function tick(ts){
+  if(!playing) return;
+  const dt = (ts - last)/1000; last = ts;
+  time = Math.min(active.dur, time + dt);
+  paint();
+  if(time >= active.dur){ stop(); return; }
+  raf = requestAnimationFrame(tick);
+}
+function start(){ playing = true; last = performance.now(); $("playIcon").setAttribute("d","M1.5 1h3.5v12H1.5zM8 1h3.5v12H8z"); raf = requestAnimationFrame(tick); }
+function stop(){ playing = false; cancelAnimationFrame(raf); const ic = $("playIcon"); if(ic) ic.setAttribute("d","M1 1l11 6-11 6z"); }
+
+function wireProject(){
+  const me = S.role === "artist" ? artistById(S.artistId) : null;
+  const who = me ? me.initials : "JT";
+  const name = me ? me.name : "Jonathan";
+
+  buildWave(active); renderStages(); renderTracks(); renderHeader();
+  renderPins(); renderThread(); renderFiles(); paint();
+
+  $("play").onclick = () => playing ? stop() : start();
+
+  $("wave").addEventListener("click", e => {
+    const r = e.currentTarget.getBoundingClientRect();
+    time = Math.max(0, Math.min(active.dur, ((e.clientX - r.left)/r.width) * active.dur));
+    closeNote(); paint();
+  });
+
+  const addNote = e => {
+    if(e && e.stopPropagation) e.stopPropagation();
+    const v = $("noteInput").value.trim();
+    if(!v) return;
+    active.comments.push({ti:Math.round(time), who, name, text:v});
+    active.comments.sort((a,b) => a.ti - b.ti);
+    $("noteInput").value = "";
+    renderPins(); renderThread();
+    openNote(active.comments.findIndex(c => c.text === v));
+  };
+  $("addNote").onclick = addNote;
+  $("noteInput").addEventListener("keydown", e => { if(e.key === "Enter") addNote(e); });
+
+  $("msgForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const v = $("msgInput").value.trim();
+    if(!v) return;
+    active.messages.push({who, name, text:v,
+      when:new Date().toLocaleTimeString([], {hour:"numeric", minute:"2-digit"})});
+    $("msgInput").value = "";
+    renderThread();
+    $("thread").scrollTop = $("thread").scrollHeight;
+  });
+
+  $("approve").onclick = () => {
+    active.status = active.status === "approved" ? "review" : "approved";
+    renderHeader(); renderTracks();
+  };
+}
+
+/* ══════════ appearance ══════════ */
+const root = document.documentElement;
+const SUN = '<circle cx="8" cy="8" r="3.1"/><path d="M8 .9v1.5M8 13.6v1.5M15.1 8h-1.5M2.4 8H.9M13 3l-1.1 1.1M4.1 11.9 3 13M13 13l-1.1-1.1M4.1 4.1 3 3"/>';
+const MOON = '<path d="M13.4 10.3A5.9 5.9 0 0 1 5.7 2.6 5.9 5.9 0 1 0 13.4 10.3z"/>';
+const effTheme = () => root.getAttribute("data-theme") || "dark";
+function syncToggle(){
+  if(!$("themeIcon")) return;
+  const dark = effTheme() === "dark";
+  $("themeIcon").innerHTML = dark ? SUN : MOON;
+  $("themeLabel").textContent = dark ? "Daylight" : "Studio";
+}
+try { const s = localStorage.getItem("jmt-theme"); if(s === "light" || s === "dark") root.setAttribute("data-theme", s); } catch(e){}
+
+/* ══════════ router ══════════ */
+function render(){
+  stop(); closeNote();
+  const html = S.view === "signin" ? viewSignin()
+    : S.view === "roster" ? viewRoster()
+    : S.view === "projects" ? viewProjects()
+    : viewProject();
+  $("app").innerHTML = html;
+  window.scrollTo(0,0);
+
+  if(S.view === "signin"){ wireSignin(); return; }
+
+  // chrome
+  syncToggle();
+  $("themeBtn").onclick = () => {
+    const next = effTheme() === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("jmt-theme", next); } catch(e){}
+    syncToggle();
+  };
+  $("signout").onclick = () => {
+    S = {view:"signin", role:null, artistId:null, projectId:null, tab:S.tab};
+    saveSession(); render();
+  };
+  document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => { S.view = b.dataset.go; render(); });
+
+  if(S.view === "roster"){
+    document.querySelectorAll("[data-artist]").forEach(b => b.onclick = () => {
+      S.artistId = b.dataset.artist;
+      if(b.dataset.project){ S.projectId = b.dataset.project; S.view = "project"; }
+      else S.view = "projects";
+      render();
+    });
+  }
+  if(S.view === "projects"){
+    document.querySelectorAll("[data-project]").forEach(b => b.onclick = () => {
+      S.projectId = b.dataset.project; S.view = "project"; render();
+    });
+  }
+  if(S.view === "project") wireProject();
+}
+
+document.addEventListener("click", e => {
+  if(document.getElementById("notepop") && !e.target.closest(".notepop,.pin")) closeNote();
+});
+document.addEventListener("keydown", e => { if(e.key === "Escape") closeNote(); });
+// a box positioned for the old width would hang off the edge after a rotate/resize
+window.addEventListener("resize", closeNote);
+
+render();
+</script>
+</body>
+</html>
