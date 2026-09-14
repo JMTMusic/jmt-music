@@ -265,7 +265,16 @@ export async function createProjectSetup(site: SiteConfig, input: CreateProjectS
       if (retry.data) return { status: "exists", setup: mapRow(retry.data as unknown as ProjectSetupRow) };
     }
 
-    if (insertResult.error || !insertResult.data) return { status: "error", message: "The Setup could not be created." };
+    if (insertResult.error || !insertResult.data) {
+      console.error("[project-setup:create] Supabase insert failed", {
+        code: insertResult.error?.code,
+        message: insertResult.error?.message,
+        details: insertResult.error?.details,
+        hint: insertResult.error?.hint,
+        projectId
+      });
+      return { status: "error", message: "The Setup could not be created." };
+    }
 
     return { status: "created", setup: mapRow(insertResult.data as unknown as ProjectSetupRow), rawToken };
   } catch {
