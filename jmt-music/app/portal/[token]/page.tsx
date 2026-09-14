@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Download, ExternalLink, MessageSquare, ShieldCheck } from "lucide-react";
 import { addPortalCommentAction, setPortalApprovalAction } from "./actions";
 import { getClientPortalByToken } from "@/lib/client-portal/repository";
+import { WorkspaceShell, workspaceEyebrow } from "@/components/client-portal/workspace-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -23,16 +24,14 @@ export default async function ClientPortalPage({ params, searchParams }: { param
   const { view } = result;
   const clientName = view.client.contactName || view.client.artistName || "Client";
   return (
-    <main className="min-h-screen bg-[#05070a] px-5 py-10 text-slate-100">
-      <div className="mx-auto max-w-5xl">
-        <header className="flex flex-wrap items-end justify-between gap-6 border-b border-white/10 pb-8">
-          <div><p className="text-xs font-semibold uppercase tracking-[.18em] text-sky-300">JMT Music · Private Client Portal</p><h1 className="mt-3 font-serif text-4xl md:text-5xl">{view.project.title}</h1><p className="mt-3 text-slate-400">Welcome, {clientName}. Files are managed by JMT Music and delivered from Google Drive.</p></div>
+    <WorkspaceShell label={clientName}>
+        <header className="flex flex-wrap items-end justify-between gap-6 py-8">
+          <div><p className={workspaceEyebrow}>{view.client.artistName} · Your portal</p><h1 className="mt-2 font-serif text-[clamp(27px,4vw,40px)] font-normal">Everything for this record, in one place.</h1><p className="mt-2 max-w-2xl text-sm text-slate-400">{view.project.title} — hear the latest delivery, leave notes, and see what JMT Music is working on next.</p></div>
           <div className="flex flex-col items-end gap-3"><div className="flex items-center gap-2 text-xs text-emerald-300"><ShieldCheck className="h-4 w-4" />Private project access</div><a href={`/project-setup/${accessToken}`} className="text-xs font-semibold text-sky-300 hover:text-sky-200">Open project setup →</a></div>
         </header>
 
-      <section className="py-8">
-        <h2 className="text-xs font-bold uppercase tracking-[.16em] text-slate-500">Project progress</h2>
-        <div className="mt-4 grid gap-3 md:grid-cols-4">{view.stages.map((item) => <div key={item.stage} className="rounded-2xl border border-white/10 bg-[#101722] p-5"><p className="text-xs font-bold uppercase tracking-wider text-sky-300">{item.stage}</p><p className="mt-2 text-sm font-semibold capitalize text-slate-100">{item.status.replaceAll("_", " ")}</p>{item.clientNote && <p className="mt-2 text-xs leading-5 text-slate-400">{item.clientNote}</p>}</div>)}</div>
+      <section className="border-t border-white/15 py-[18px]">
+        <div className="flex flex-wrap">{view.stages.map((item, index) => <div key={item.stage} className={`min-w-32 flex-1 pr-4 ${index ? "border-l border-white/15 pl-4" : ""}`}><div className={`mb-2 h-[3px] rounded-sm ${item.status === "complete" ? "bg-blue-400" : item.status === "in_progress" || item.status === "ready" ? "bg-gradient-to-r from-blue-400 from-60% to-white/15 to-60%" : "bg-white/15"}`} /><p className={`text-xs font-medium capitalize ${item.status === "not_started" ? "text-[#7c8794]" : "text-blue-200"}`}>{item.stage}</p><p className="text-[11px] capitalize text-[#7c8794]">{item.clientNote || item.status.replaceAll("_", " ")}</p></div>)}</div>
       </section>
 
       <section className="pb-8">
@@ -56,7 +55,6 @@ export default async function ClientPortalPage({ params, searchParams }: { param
             })}</div>
           )}
         </section>
-      </div>
-    </main>
+    </WorkspaceShell>
   );
 }
