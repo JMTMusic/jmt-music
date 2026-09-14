@@ -41,6 +41,7 @@ export async function createStudioProject(
   const supabase = createSupabaseAdminClient();
   let createdClientId: string | null = null;
   let projectId: string | null = null;
+  let creationStep = "initializing project creation";
 
   try {
     const { data: property, error: propertyError } = await supabase.from("properties").select("id").eq("slug", site.id).maybeSingle();
@@ -64,29 +65,46 @@ export async function createStudioProject(
       createdClientId = client.id;
     }
 
+    creationStep = "creating the project";
     const { data: project, error: projectError } = await supabase
       .from("projects")
       .insert({ property_id: property.id, type: "client_work", title: projectName, phase: "not_started", client_id: clientId, created_by: userId })
       .select("id")
       .single();
-    if (projectError || !project) throw new Error("project");
+    if (projectError || !project) {
+      console.error("[studio:create-project] Project insert failed", { code: projectError?.code, message: projectError?.message, details: projectError?.details, hint: projectError?.hint });
+      throw new Error("project_insert_failed");
+    }
     projectId = project.id;
 
+    creationStep = "creating portal stages";
     const { error: stagesError } = await supabase.from("project_portal_stages").insert(
       PORTAL_STAGE_NAMES.map((stage) => ({ project_id: project.id, property_id: property.id, stage, status: "not_started" }))
     );
-    if (stagesError) throw new Error("stages");
+    if (stagesError) {
+      console.error("[studio:create-project] Portal stage insert failed", { code: stagesError.code, message: stagesError.message, details: stagesError.details, hint: stagesError.hint });
+      throw new Error("portal_stage_insert_failed");
+    }
 
+    creationStep = "creating portal access";
     const setup = await createProjectSetup(site, { projectId: project.id, createdBy: userId });
-    if (setup.status !== "created") throw new Error("setup");
+    if (setup.status !== "created") {
+      console.error("[studio:create-project] Portal access creation failed", { status: setup.status, message: setup.status === "error" ? setup.message : "A setup already exists for the newly created project." });
+      throw new Error("portal_access_insert_failed");
+    }
 
     const portalUrl = `https://www.${site.domain}/portal/${portalSlug}?access=${encodeURIComponent(setup.rawToken)}`;
     revalidatePath("/dashboard");
     revalidatePath("/control-center/projects");
     return { status: "success", message: "Client project created.", portalUrl, projectId: project.id };
-  } catch {
+  } catch (error) {
+    console.error("[studio:create-project] Creation rolled back", {
+      step: creationStep,
+      error: error instanceof Error ? error.message : "unknown_error",
+      projectId
+    });
     if (projectId) await supabase.from("projects").delete().eq("id", projectId);
     if (createdClientId) await supabase.from("clients").delete().eq("id", createdClientId);
-    return { status: "error", message: "The project could not be created. No partial project was kept." };
+    return { status: "error", message: `The project could not be created while ${creationStep}. No partial project was kept.` };
   }
 }
