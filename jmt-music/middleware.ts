@@ -1,3 +1,4 @@
+
 import { NextRequest, NextResponse } from "next/server";
 
 /**
@@ -36,5 +37,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/control-center/:path*"]
+  matcher: ["/control-center/:path*", "/dashboard"]
 };
