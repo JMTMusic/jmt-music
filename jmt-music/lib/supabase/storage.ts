@@ -5,9 +5,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export const BEAT_ARTWORK_BUCKET = "beat-artwork";
 export const BEAT_AUDIO_BUCKET = "beat-audio";
 export const WEBSITE_MEDIA_BUCKET = "website-media";
+export const PORTAL_AUDIO_BUCKET = "portal-audio";
 export const WEBSITE_MEDIA_MAX_BYTES = 10 * 1024 * 1024;
 export const BEAT_ARTWORK_MAX_BYTES = 10 * 1024 * 1024;
 export const BEAT_AUDIO_MAX_BYTES = 100 * 1024 * 1024;
+export const PORTAL_AUDIO_MAX_BYTES = 100 * 1024 * 1024;
 export const BEAT_ARTWORK_MIME_TYPES = [
   "image/jpeg",
   "image/png",
@@ -60,6 +62,31 @@ export async function ensureBeatAudioBucket(
 
   const created = await supabase.storage.createBucket(BEAT_AUDIO_BUCKET, options);
   if (created.error) console.error("[beat-audio] Bucket creation failed:", created.error.message);
+  return { error: created.error?.message || null };
+}
+
+/**
+ * Creates or normalizes the client-portal preview-audio bucket. Unlike the
+ * beat/website buckets this one is PRIVATE — playback goes through short-lived
+ * signed URLs scoped to a valid portal token, never a public URL.
+ */
+export async function ensurePortalAudioBucket(
+  supabase: SupabaseClient
+): Promise<{ error: string | null }> {
+  const options = {
+    public: false,
+    fileSizeLimit: PORTAL_AUDIO_MAX_BYTES,
+    allowedMimeTypes: [...BEAT_AUDIO_MIME_TYPES]
+  };
+  const current = await supabase.storage.getBucket(PORTAL_AUDIO_BUCKET);
+  if (current.data) return { error: null };
+  if (current.error && !current.error.message.toLowerCase().includes("not found")) {
+    console.error("[portal-audio] Bucket lookup failed:", current.error.message);
+    return { error: current.error.message };
+  }
+
+  const created = await supabase.storage.createBucket(PORTAL_AUDIO_BUCKET, options);
+  if (created.error) console.error("[portal-audio] Bucket creation failed:", created.error.message);
   return { error: created.error?.message || null };
 }
 

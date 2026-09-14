@@ -59,11 +59,13 @@ export function ClientMixRoom({ view, accessToken, clientName }: { view: ClientP
         <section className={`${workspacePanel} overflow-hidden p-[16px_18px_18px]`}>
           {selected ? <>
             <div className="mb-4 flex flex-wrap items-start gap-3">
-              <div className="min-w-[180px] flex-1"><h2 className="font-serif text-[21px] leading-tight text-white">{selected.title}</h2><p className="mt-1 text-[11.5px] text-slate-500">{view.client.artistName} · {selected.versionLabel || selected.fileType}</p></div>
+              <div className="min-w-[180px] flex-1"><h2 className="font-serif text-[21px] leading-tight text-white">{selected.title}</h2><p className="mt-1 text-[11.5px] text-slate-500">{[view.client.artistName, selected.bpm, selected.musicalKey, selected.versionLabel || selected.fileType].filter(Boolean).join(" · ")}</p></div>
               {selected.approval && <span className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${selected.approval.status === "approved" ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300" : "border-amber-300/30 bg-amber-300/10 text-amber-200"}`}>{selected.approval.status.replace("_", " ")}</span>}
             </div>
             {selected.fileType === "audio" ? <>
-              <audio key={selected.id} ref={audio} src={`/api/portal/${encodeURIComponent(accessToken)}/files/${encodeURIComponent(selected.id)}/audio`} preload="metadata" onLoadedMetadata={(event) => setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)} onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)} />
+              {/* previewAudioUrl is a short-lived signed Supabase Storage URL (the fast, seekable playback copy).
+                  Older songs without an uploaded preview fall back to proxying the Drive master. */}
+              <audio key={selected.id} ref={audio} src={selected.previewAudioUrl || `/api/portal/${encodeURIComponent(accessToken)}/files/${encodeURIComponent(selected.id)}/audio`} preload="metadata" onLoadedMetadata={(event) => setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)} onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)} />
               <div className="relative pt-[22px]">
                 <div onClick={scrub} className="flex h-24 cursor-pointer items-center gap-[2px]" aria-label="Audio waveform — click to scrub">{bars.map((height, index) => { const played = duration ? index / bars.length <= currentTime / duration : false; return <span key={index} className={`min-w-0 flex-1 rounded-full ${played ? "bg-blue-400" : "bg-[#334052]"}`} style={{ height: `${height}%` }} />; })}<span className="absolute bottom-0 top-[22px] w-px bg-blue-200" style={{ left: `${duration ? (currentTime / duration) * 100 : 0}%` }} /></div>
               </div>

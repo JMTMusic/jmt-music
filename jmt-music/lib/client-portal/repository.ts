@@ -1,20 +1,28 @@
 import "server-only";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { PORTAL_AUDIO_BUCKET } from "@/lib/supabase/storage";
 import { getProjectSetupByRawToken } from "@/lib/project-setup/repository";
 import type { ClientPortalView, PortalApprovalStatus, PortalComment, PortalFile, PortalFileType, PortalStage, PortalStageName } from "./types";
 
 export const PORTAL_STAGE_NAMES: PortalStageName[] = ["production", "mixing", "mastering", "delivery"];
-const emptyStages = (): PortalStage[] => PORTAL_STAGE_NAMES.map((stage) => ({ stage, status: "not_started", clientNote: null, updatedAt: null }));
+const emptyStages = (): PortalStage[] => PORTAL_STAGE_NAMES.map((stage) => ({ stage, status: "not_started", progressPct: 0, clientNote: null, updatedAt: null }));
+
+/** Resolves a short-lived signed playback URL for a preview-audio object, or null if unset/unavailable. */
+async function signPreviewAudioUrl(supabase: ReturnType<typeof createSupabaseAdminClient>, path: string | null): Promise<string | null> {
+  if (!path) return null;
+  const { data, error } = await supabase.storage.from(PORTAL_AUDIO_BUCKET).createSignedUrl(path, 3600);
+  return error ? null : data.signedUrl;
+}
 
 export async function getPortalStagesForProject(projectId: string): Promise<{ status: "ready" | "error"; stages: PortalStage[] }> {
   try {
-    const { data, error } = await createSupabaseAdminClient().from("project_portal_stages").select("stage,status,client_note,updated_at").eq("project_id", projectId);
+    const { data, error } = await createSupabaseAdminClient().from("project_portal_stages").select("stage,status,progress_pct,client_note,updated_at").eq("project_id", projectId);
     if (error) return { status: "error", stages: emptyStages() };
     const rows = data || [];
     return { status: "ready", stages: emptyStages().map((fallback) => {
       const row = rows.find((item) => item.stage === fallback.stage);
-      return row ? { stage: row.stage, status: row.status, clientNote: row.client_note, updatedAt: row.updated_at } : fallback;
+      return row ? { stage: row.stage, status: row.status, progressPct: row.progress_pct ?? 0, clientNote: row.client_note, updatedAt: row.updated_at } : fallback;
     }) };
   } catch { return { status: "error", stages: emptyStages() }; }
 }
@@ -31,11 +39,16 @@ export async function getPortalFilesForProject(projectId: string): Promise<Staff
     const supabase = createSupabaseAdminClient();
     const { data, error } = await supabase
       .from("portal_files")
-      .select("id, title, file_type, version_label, drive_url, note, created_at")
+      .select("id, title, file_type, version_label, drive_url, note, created_at, bpm, musical_key, preview_audio_path")
       .eq("project_id", projectId)
       .order("created_at", { ascending: false });
     if (error) return { status: "error", files: [], message: "Apply the Client Portal Supabase migration to manage files." };
-    const files: PortalFile[] = (data || []).map((file) => ({ id: file.id, title: file.title, fileType: file.file_type, versionLabel: file.version_label, driveUrl: file.drive_url, note: file.note, createdAt: file.created_at, comments: [], approval: null }));
+    const files: PortalFile[] = await Promise.all((data || []).map(async (file) => ({
+      id: file.id, title: file.title, fileType: file.file_type, versionLabel: file.version_label, driveUrl: file.drive_url,
+      note: file.note, createdAt: file.created_at, bpm: file.bpm, musicalKey: file.musical_key,
+      previewAudioPath: file.preview_audio_path, previewAudioUrl: await signPreviewAudioUrl(supabase, file.preview_audio_path),
+      comments: [], approval: null
+    })));
     return { status: files.length ? "ready" : "empty", files };
   } catch {
     return { status: "error", files: [], message: "Supabase is not configured or reachable." };
@@ -55,7 +68,7 @@ export async function getClientPortalByToken(rawToken: unknown): Promise<PortalR
     const supabase = createSupabaseAdminClient();
     const { data: files, error } = await supabase
       .from("portal_files")
-      .select("id, title, file_type, version_label, drive_url, note, created_at")
+      .select("id, title, file_type, version_label, drive_url, note, created_at, bpm, musical_key, preview_audio_path")
       .eq("project_id", access.view.project.id)
       .eq("visible_to_client", true)
       .order("created_at", { ascending: false });
@@ -69,7 +82,7 @@ export async function getClientPortalByToken(rawToken: unknown): Promise<PortalR
         ])
       : [{ data: [] }, { data: [] }];
 
-    const mapped: PortalFile[] = (files || []).map((file) => ({
+    const mapped: PortalFile[] = await Promise.all((files || []).map(async (file) => ({
       id: file.id,
       title: file.title,
       fileType: file.file_type as PortalFileType,
@@ -77,6 +90,10 @@ export async function getClientPortalByToken(rawToken: unknown): Promise<PortalR
       driveUrl: file.drive_url,
       note: file.note,
       createdAt: file.created_at,
+      bpm: file.bpm,
+      musicalKey: file.musical_key,
+      previewAudioPath: file.preview_audio_path,
+      previewAudioUrl: await signPreviewAudioUrl(supabase, file.preview_audio_path),
       comments: (comments || []).filter((item) => item.file_id === file.id).map((item) => ({
         id: item.id,
         authorName: item.author_name,
@@ -89,7 +106,7 @@ export async function getClientPortalByToken(rawToken: unknown): Promise<PortalR
         const approval = (approvals || []).find((item) => item.file_id === file.id);
         return approval ? { status: approval.status, clientName: approval.client_name, note: approval.note, updatedAt: approval.updated_at } : null;
       })()
-    }));
+    })));
 
     const stageResult = await getPortalStagesForProject(access.view.project.id);
     return { status: "found", view: { project: access.view.project, client: access.view.client, files: mapped, stages: stageResult.stages } };

@@ -5,9 +5,21 @@ import { getControlCenterRole } from "@/lib/control-center/access";
 import { getSiteConfig } from "@/lib/control-center/data";
 import { siteRegistry } from "@/lib/control-center/site-registry";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { ensurePortalAudioBucket, PORTAL_AUDIO_BUCKET, PORTAL_AUDIO_MAX_BYTES, BEAT_AUDIO_MIME_TYPES } from "@/lib/supabase/storage";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f-]{27}$/i;
 const DRIVE_URL_PATTERN = /^https:\/\/(drive|docs)\.google\.com\//i;
+
+async function resolveProjectForWrite(propertySlug: string, projectId: string) {
+  if (!UUID_PATTERN.test(projectId) || !siteRegistry.some((site) => site.id === propertySlug)) return null;
+  const site = getSiteConfig(propertySlug);
+  const supabase = createSupabaseAdminClient();
+  const { data: property } = await supabase.from("properties").select("id").eq("slug", site.id).maybeSingle();
+  if (!property) return null;
+  const { data: project } = await supabase.from("projects").select("id").eq("id", projectId).eq("property_id", property.id).maybeSingle();
+  if (!project) return null;
+  return { supabase, propertyId: property.id, projectId: project.id };
+}
 
 export type AddPortalFileState = { status: "idle" | "success" | "error"; message: string };
 
@@ -22,23 +34,121 @@ export async function addPortalFileAction(_previous: AddPortalFileState, formDat
   const fileType = String(formData.get("fileType") || "other");
   const versionLabel = String(formData.get("versionLabel") || "").trim() || null;
   const note = String(formData.get("note") || "").trim() || null;
-  if (!UUID_PATTERN.test(projectId) || !siteRegistry.some((site) => site.id === propertySlug)) return { status: "error", message: "Select a valid project and property." };
+  const bpm = String(formData.get("bpm") || "").trim() || null;
+  const musicalKey = String(formData.get("musicalKey") || "").trim() || null;
+  const previewAudioPath = String(formData.get("previewAudioPath") || "").trim() || null;
   if (!title || title.length > 160) return { status: "error", message: "Enter a file title under 160 characters." };
   if (!DRIVE_URL_PATTERN.test(driveUrl)) return { status: "error", message: "Paste a Google Drive or Google Docs link." };
   if (!["audio", "stems", "artwork", "document", "other"].includes(fileType)) return { status: "error", message: "Choose a valid file type." };
+  if (bpm && bpm.length > 20) return { status: "error", message: "BPM is too long." };
+  if (musicalKey && musicalKey.length > 20) return { status: "error", message: "Key is too long." };
 
   try {
-    const site = getSiteConfig(propertySlug);
-    const supabase = createSupabaseAdminClient();
-    const { data: property } = await supabase.from("properties").select("id").eq("slug", site.id).maybeSingle();
-    if (!property) return { status: "error", message: "The selected property could not be found." };
-    const { data: project } = await supabase.from("projects").select("id").eq("id", projectId).eq("property_id", property.id).maybeSingle();
-    if (!project) return { status: "error", message: "That project does not belong to this property." };
-    const { error } = await supabase.from("portal_files").insert({ property_id: property.id, project_id: project.id, title, drive_url: driveUrl, file_type: fileType, version_label: versionLabel, note, created_by: process.env.CONTROL_CENTER_SUPABASE_USER_ID || null });
+    const resolved = await resolveProjectForWrite(propertySlug, projectId);
+    if (!resolved) return { status: "error", message: "Select a valid project and property." };
+    const { supabase, propertyId, projectId: resolvedProjectId } = resolved;
+    const { error } = await supabase.from("portal_files").insert({
+      property_id: propertyId, project_id: resolvedProjectId, title, drive_url: driveUrl, file_type: fileType,
+      version_label: versionLabel, note, bpm, musical_key: musicalKey, preview_audio_path: previewAudioPath,
+      created_by: process.env.CONTROL_CENTER_SUPABASE_USER_ID || null
+    });
     if (error) return { status: "error", message: "The file link could not be added. Apply the latest Supabase migration first." };
     revalidatePath(`/control-center/projects/${projectId}`);
     return { status: "success", message: "File added to the client portal." };
   } catch {
     return { status: "error", message: "The file link could not be added." };
+  }
+}
+
+export async function updatePortalFileAction(_previous: AddPortalFileState, formData: FormData): Promise<AddPortalFileState> {
+  const role = await getControlCenterRole();
+  if (role !== "owner" && role !== "editor") return { status: "error", message: "You do not have permission to manage portal files." };
+
+  const propertySlug = String(formData.get("property") || "");
+  const projectId = String(formData.get("projectId") || "");
+  const fileId = String(formData.get("fileId") || "");
+  const title = String(formData.get("title") || "").trim();
+  const driveUrl = String(formData.get("driveUrl") || "").trim();
+  const versionLabel = String(formData.get("versionLabel") || "").trim() || null;
+  const bpm = String(formData.get("bpm") || "").trim() || null;
+  const musicalKey = String(formData.get("musicalKey") || "").trim() || null;
+  if (!UUID_PATTERN.test(fileId)) return { status: "error", message: "Invalid file." };
+  if (!title || title.length > 160) return { status: "error", message: "Enter a file title under 160 characters." };
+  if (!DRIVE_URL_PATTERN.test(driveUrl)) return { status: "error", message: "Paste a Google Drive or Google Docs link." };
+  if (bpm && bpm.length > 20) return { status: "error", message: "BPM is too long." };
+  if (musicalKey && musicalKey.length > 20) return { status: "error", message: "Key is too long." };
+
+  try {
+    const resolved = await resolveProjectForWrite(propertySlug, projectId);
+    if (!resolved) return { status: "error", message: "Select a valid project and property." };
+    const { supabase, projectId: resolvedProjectId } = resolved;
+    const { error } = await supabase.from("portal_files").update({
+      title, drive_url: driveUrl, version_label: versionLabel, bpm, musical_key: musicalKey
+    }).eq("id", fileId).eq("project_id", resolvedProjectId);
+    if (error) return { status: "error", message: "The file could not be updated." };
+    revalidatePath(`/control-center/projects/${projectId}`);
+    return { status: "success", message: "Song details updated." };
+  } catch {
+    return { status: "error", message: "The file could not be updated." };
+  }
+}
+
+export type PreparePortalAudioResult =
+  | { status: "success"; bucket: string; path: string; token: string }
+  | { status: "error"; message: string };
+
+/** Prepares a direct-to-Storage signed upload for the primary playback copy of a song (private bucket). */
+export async function preparePortalAudioUpload(input: { property: string; projectId: string; fileId: string; type: string; size: number }): Promise<PreparePortalAudioResult> {
+  const role = await getControlCenterRole();
+  if (role !== "owner" && role !== "editor") return { status: "error", message: "You do not have permission to upload audio." };
+  if (!UUID_PATTERN.test(input.fileId)) return { status: "error", message: "Invalid file." };
+  if (!BEAT_AUDIO_MIME_TYPES.includes(input.type as typeof BEAT_AUDIO_MIME_TYPES[number]) || input.size > PORTAL_AUDIO_MAX_BYTES) {
+    return { status: "error", message: "Audio must be MP3, WAV, or M4A and no larger than 100 MB." };
+  }
+
+  try {
+    const resolved = await resolveProjectForWrite(input.property, input.projectId);
+    if (!resolved) return { status: "error", message: "Select a valid project and property." };
+    const { supabase, propertyId, projectId } = resolved;
+    const { data: file } = await supabase.from("portal_files").select("id").eq("id", input.fileId).eq("project_id", projectId).maybeSingle();
+    if (!file) return { status: "error", message: "That song does not belong to this project." };
+
+    const bucket = await ensurePortalAudioBucket(supabase);
+    if (bucket.error) return { status: "error", message: "Audio storage is unavailable." };
+    const extension = input.type === "audio/wav" || input.type === "audio/x-wav" ? "wav" : input.type === "audio/mpeg" ? "mp3" : "m4a";
+    const path = `${propertyId}/${projectId}/${input.fileId}/${crypto.randomUUID()}.${extension}`;
+    const signed = await supabase.storage.from(PORTAL_AUDIO_BUCKET).createSignedUploadUrl(path);
+    if (signed.error) return { status: "error", message: "Audio upload could not be prepared." };
+    return { status: "success", bucket: PORTAL_AUDIO_BUCKET, path, token: signed.data.token };
+  } catch {
+    return { status: "error", message: "Audio upload could not be prepared." };
+  }
+}
+
+/** Saves the uploaded preview-audio path onto a song after a successful client-side Storage upload. */
+export async function savePortalAudioPathAction(_previous: AddPortalFileState, formData: FormData): Promise<AddPortalFileState> {
+  const role = await getControlCenterRole();
+  if (role !== "owner" && role !== "editor") return { status: "error", message: "You do not have permission to manage portal files." };
+
+  const propertySlug = String(formData.get("property") || "");
+  const projectId = String(formData.get("projectId") || "");
+  const fileId = String(formData.get("fileId") || "");
+  const previewAudioPath = String(formData.get("previewAudioPath") || "").trim();
+  if (!UUID_PATTERN.test(fileId) || !previewAudioPath) return { status: "error", message: "Invalid upload." };
+
+  try {
+    const resolved = await resolveProjectForWrite(propertySlug, projectId);
+    if (!resolved) return { status: "error", message: "Select a valid project and property." };
+    const { supabase, projectId: resolvedProjectId } = resolved;
+    const { data: previous } = await supabase.from("portal_files").select("preview_audio_path").eq("id", fileId).eq("project_id", resolvedProjectId).maybeSingle();
+    const { error } = await supabase.from("portal_files").update({ preview_audio_path: previewAudioPath }).eq("id", fileId).eq("project_id", resolvedProjectId);
+    if (error) return { status: "error", message: "The uploaded audio could not be saved to this song." };
+    if (previous?.preview_audio_path && previous.preview_audio_path !== previewAudioPath) {
+      await supabase.storage.from(PORTAL_AUDIO_BUCKET).remove([previous.preview_audio_path]);
+    }
+    revalidatePath(`/control-center/projects/${projectId}`);
+    return { status: "success", message: "Playback audio updated." };
+  } catch {
+    return { status: "error", message: "The uploaded audio could not be saved to this song." };
   }
 }
