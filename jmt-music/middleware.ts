@@ -37,5 +37,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/control-center/:path*", "/dashboard/:path*"]
+  matcher: ["/control-center/:path*", "/dashboard/:path*", "/studio/:path*"]
 };
