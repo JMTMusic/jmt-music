@@ -14,8 +14,6 @@ export type StudioActionState = {
   projectId?: string;
 };
 
-export const initialStudioActionState: StudioActionState = { status: "idle", message: "" };
-
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 

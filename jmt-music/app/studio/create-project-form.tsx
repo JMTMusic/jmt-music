@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
-import { createStudioProject, initialStudioActionState } from "./actions";
+import { createStudioProject } from "./actions";
+import type { StudioActionState } from "./actions";
 
 const fieldClass = "mt-2 w-full rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-slate-100 outline-none transition placeholder:text-slate-600 focus:border-sky-300/60";
+const initialStudioActionState: StudioActionState = { status: "idle", message: "" };
 
 export function CreateProjectForm() {
   const [state, action, pending] = useActionState(createStudioProject, initialStudioActionState);
