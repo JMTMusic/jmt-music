@@ -23,6 +23,17 @@ export function middleware(request: NextRequest) {
       ).split(":");
 
       if (providedUsername === username && providedPassword === password) {
+        // Control Center's project/client surface is being rebuilt (2026-09-14) — send that
+        // traffic to the newer /dashboard workspace instead. Other Control Center modules
+        // (beats, website, growth engine, etc.) are unaffected and still resolve normally.
+        const { pathname } = request.nextUrl;
+        if (pathname === "/control-center" || pathname === "/control-center/projects") {
+          return NextResponse.redirect(new URL("/dashboard", request.url));
+        }
+        const projectMatch = pathname.match(/^\/control-center\/projects\/([^/]+)$/);
+        if (projectMatch) {
+          return NextResponse.redirect(new URL(`/dashboard/${projectMatch[1]}`, request.url));
+        }
         return NextResponse.next();
       }
     } catch {
