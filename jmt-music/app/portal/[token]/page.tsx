@@ -27,7 +27,7 @@ export default async function ClientPortalPage({ params, searchParams }: { param
         </header>
 
       <section className="border-t border-white/15 py-[18px]">
-        <div className="flex flex-wrap">{view.stages.map((item, index) => <div key={item.stage} className={`min-w-32 flex-1 pr-4 ${index ? "border-l border-white/15 pl-4" : ""}`}><div className="mb-2 h-[3px] rounded-sm bg-white/15" style={{ background: `linear-gradient(90deg, #60a5fa ${item.progressPct}%, rgba(255,255,255,.15) ${item.progressPct}%)` }} /><p className={`text-xs font-medium capitalize ${item.status === "not_started" ? "text-[#7c8794]" : "text-blue-200"}`}>{item.stage}{item.progressPct > 0 && item.progressPct < 100 ? ` · ${item.progressPct}%` : ""}</p><p className="text-[11px] capitalize text-[#7c8794]">{item.clientNote || item.status.replaceAll("_", " ")}</p></div>)}</div>
+        <div className="flex flex-wrap">{view.stages.map((item, index) => <div key={item.stage} className={`min-w-32 flex-1 pr-4 ${index ? "border-l border-white/15 pl-4" : ""}`}><div className="mb-2 h-[3px] rounded-sm" style={{ background: `linear-gradient(90deg, #60a5fa ${item.progressPct}%, rgba(255,255,255,.15) ${item.progressPct}%)` }} /><p className={`text-xs font-medium capitalize ${item.status === "not_started" ? "text-[#7c8794]" : "text-blue-200"}`}>{item.stage}{item.progressPct > 0 && item.progressPct < 100 ? ` · ${item.progressPct}%` : ""}</p><p className="text-[11px] capitalize text-[#7c8794]">{item.clientNote || item.status.replaceAll("_", " ")}</p></div>)}</div>
       </section>
 
       <ClientMixRoom view={view} accessToken={accessToken} clientName={clientName} />
