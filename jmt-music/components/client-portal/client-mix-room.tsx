@@ -2,23 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, Download, FileAudio, MessageSquare, Pause, Play, Send } from "lucide-react";
-import type { ClientPortalView, PortalFile } from "@/lib/client-portal/types";
+import type { ClientPortalView } from "@/lib/client-portal/types";
 import { addPortalCommentAction, setPortalApprovalAction } from "@/app/portal/[token]/actions";
 import { workspacePanel } from "./workspace-shell";
-
-function driveFileId(url: string) {
-  try {
-    const parsed = new URL(url);
-    const pathMatch = parsed.pathname.match(/\/file\/d\/([^/]+)/);
-    const id = pathMatch?.[1] || parsed.searchParams.get("id");
-    return id;
-  } catch { return null; }
-}
-
-function driveAudioUrl(url: string) {
-  const id = driveFileId(url);
-  return id ? `https://drive.google.com/uc?export=download&id=${id}` : url;
-}
 
 function time(value: number | null) {
   if (value === null) return "";
@@ -77,7 +63,7 @@ export function ClientMixRoom({ view, accessToken, clientName }: { view: ClientP
               {selected.approval && <span className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${selected.approval.status === "approved" ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300" : "border-amber-300/30 bg-amber-300/10 text-amber-200"}`}>{selected.approval.status.replace("_", " ")}</span>}
             </div>
             {selected.fileType === "audio" ? <>
-              <audio key={selected.id} ref={audio} src={driveAudioUrl(selected.driveUrl)} preload="metadata" onLoadedMetadata={(event) => setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)} onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)} />
+              <audio key={selected.id} ref={audio} src={`/api/portal/${encodeURIComponent(accessToken)}/files/${encodeURIComponent(selected.id)}/audio`} preload="metadata" onLoadedMetadata={(event) => setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)} onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)} />
               <div className="relative pt-[22px]">
                 <div onClick={scrub} className="flex h-24 cursor-pointer items-center gap-[2px]" aria-label="Audio waveform — click to scrub">{bars.map((height, index) => { const played = duration ? index / bars.length <= currentTime / duration : false; return <span key={index} className={`min-w-0 flex-1 rounded-full ${played ? "bg-blue-400" : "bg-[#334052]"}`} style={{ height: `${height}%` }} />; })}<span className="absolute bottom-0 top-[22px] w-px bg-blue-200" style={{ left: `${duration ? (currentTime / duration) * 100 : 0}%` }} /></div>
               </div>
