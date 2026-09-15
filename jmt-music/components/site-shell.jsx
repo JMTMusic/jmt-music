@@ -14,7 +14,8 @@ const navigation = [
   ["Beats", "/beats"],
   ["Services", "/services"],
   ["Sync", "/sync"],
-  ["Contact", "/contact"]
+  ["Contact", "/contact"],
+  ["Login", "/login"]
 ];
 
 export function SiteShell({ children, footerCms, extraGlobalSections = [] }) {
@@ -39,7 +40,7 @@ export function SiteShell({ children, footerCms, extraGlobalSections = [] }) {
     };
   }, [open]);
 
-  if (pathname.startsWith("/control-center") || pathname.startsWith("/dashboard") || pathname.startsWith("/studio") || pathname.startsWith("/start-your-project") || pathname.startsWith("/project-setup") || pathname.startsWith("/portal")) {
+  if (pathname.startsWith("/control-center") || pathname.startsWith("/dashboard") || pathname.startsWith("/studio") || pathname.startsWith("/start-your-project") || pathname.startsWith("/project-setup") || pathname.startsWith("/portal") || pathname.startsWith("/login")) {
     return children;
   }
 

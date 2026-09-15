@@ -26,7 +26,7 @@ export default async function ClientPortalProjectPage({ params }: { params: Prom
   const setup: ProjectSetupRecord | null = setupResult.status === "found" ? setupResult.setup : null;
   const setupSchemaUnavailable = setupResult.status === "error" && setupResult.message.toLowerCase().includes("migration");
 
-  return <WorkspaceShell><div className="pt-5">
+  return <WorkspaceShell showSignOut><div className="pt-5">
     <Link href="/dashboard" className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-blue-200"><ArrowLeft className="h-3.5 w-3.5" />Artists</Link>
     <header className="py-7"><p className={workspaceEyebrow}>{client?.artistName || "Client not linked"} · Client project</p><h1 className="mt-2 font-serif text-[clamp(27px,4vw,40px)] font-normal">{project.title}</h1><div className="mt-2 flex flex-wrap gap-4 text-xs text-[#7c8794]"><span>{project.phase.replace("_", " ")}</span>{project.targetDate && <span className="flex items-center gap-1.5"><CalendarClock className="h-4 w-4" />{project.targetDate}</span>}</div></header>
 

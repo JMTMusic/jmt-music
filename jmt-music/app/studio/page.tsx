@@ -23,7 +23,7 @@ export default async function StudioPage() {
   const clients = clientsResult.status === "fulfilled" ? (clientsResult.value.clients || []) : [];
 
   return (
-    <WorkspaceShell>
+    <WorkspaceShell showSignOut>
         <header className="py-8">
           <p className={`${workspaceEyebrow} flex items-center gap-2`}><LockKeyhole className="h-3.5 w-3.5" />Private owner workspace</p>
           <h1 className="mt-2 font-serif text-[clamp(27px,4vw,40px)] font-normal">Who needs you today.</h1>

@@ -19,7 +19,7 @@ export default async function ClientPortalDashboardPage() {
   const waiting = projects.filter((project) => project.isWaiting);
 
   return (
-    <WorkspaceShell>
+    <WorkspaceShell showSignOut>
         <header className="flex flex-wrap items-end justify-between gap-5 py-8">
           <div>
             <p className={workspaceEyebrow}>{roster.length} artist{roster.length === 1 ? "" : "s"} · {projects.filter((project) => project.phase !== "done").length} active projects</p>
