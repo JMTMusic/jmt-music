@@ -5,6 +5,7 @@ import { getControlCenterRole } from "@/lib/control-center/access";
 import { getSiteConfig } from "@/lib/control-center/data";
 import { siteRegistry } from "@/lib/control-center/site-registry";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { addStaffPortalComment } from "@/lib/client-portal/repository";
 import { ensurePortalAudioBucket, PORTAL_AUDIO_BUCKET, PORTAL_AUDIO_MAX_BYTES, BEAT_AUDIO_MIME_TYPES } from "@/lib/supabase/storage";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f-]{27}$/i;
@@ -151,4 +152,18 @@ export async function savePortalAudioPathAction(_previous: AddPortalFileState, f
   } catch {
     return { status: "error", message: "The uploaded audio could not be saved to this song." };
   }
+}
+
+/** Bound to a projectId (see ClientMixRoom's .bind(null, accessToken) for the matching client-side pattern) so the admin mix room can post it directly as a form action. */
+export async function addStaffPortalCommentAction(projectId: string, formData: FormData) {
+  const role = await getControlCenterRole();
+  if (role !== "owner" && role !== "editor") return;
+  const timestampRaw = String(formData.get("timestamp") || "").trim();
+  const result = await addStaffPortalComment(projectId, {
+    fileId: String(formData.get("fileId") || ""),
+    authorName: String(formData.get("authorName") || "Jonathan"),
+    body: String(formData.get("body") || ""),
+    timestampSeconds: timestampRaw ? Number(timestampRaw) : null
+  });
+  if (result.status === "success") revalidatePath(`/dashboard/${projectId}`);
 }
