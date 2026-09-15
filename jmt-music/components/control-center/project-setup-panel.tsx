@@ -89,7 +89,7 @@ export function ProjectSetupPanel({
 
   if (schemaUnavailable) {
     return (
-      <div className="flex items-start gap-3 rounded-xl border border-amber-300/15 bg-amber-300/[0.055] p-4 text-xs text-amber-100/80">
+      <div className="flex items-start gap-3 rounded-[6px] border border-amber-300/15 bg-amber-300/[0.055] p-4 text-xs text-amber-100/80">
         <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
         <p>Project Setup is not available until the latest Supabase migration is applied.</p>
       </div>
@@ -162,16 +162,16 @@ export function ProjectSetupPanel({
         <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{NO_SETUP_LABEL}</p>
         <p className="mt-2 text-sm text-slate-400">No Project Setup has been created for this Project yet.</p>
         {!hasClient ? (
-          <p className="mt-4 rounded-xl border border-amber-300/15 bg-amber-300/[0.055] p-3 text-xs text-amber-100/80">Link a Client to this Project before creating Project Setup.</p>
+          <p className="mt-4 rounded-[6px] border border-amber-300/15 bg-amber-300/[0.055] p-3 text-xs text-amber-100/80">Link a Client to this Project before creating Project Setup.</p>
         ) : (
           canEdit && (
-            <button type="button" onClick={runCreate} disabled={pending} className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-sky-300 bg-sky-300 px-4 text-sm font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-sky-200 disabled:opacity-60">
+            <button type="button" onClick={runCreate} disabled={pending} className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-[6px] border border-blue-400 bg-blue-400 px-4 text-sm font-semibold text-[#04101f] transition hover:-translate-y-0.5 hover:bg-blue-300 disabled:opacity-60">
               {pending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}Create Project Setup
             </button>
           )
         )}
         {revealedToken && <RevealedLinkCallout rawToken={revealedToken} copied={copied} onCopy={copyLink} onDismiss={() => setRevealedToken(null)} />}
-        {error && <p role="alert" className="mt-4 rounded-lg border border-red-400/20 bg-red-400/[0.06] p-2 text-[11px] text-red-200">{error}</p>}
+        {error && <p role="alert" className="mt-4 rounded-[6px] border border-red-400/20 bg-red-400/[0.06] p-2 text-[11px] text-red-200">{error}</p>}
       </div>
     );
   }
@@ -181,7 +181,7 @@ export function ProjectSetupPanel({
   return (
     <div>
       <div className="flex flex-wrap items-center gap-2">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-sky-300">{STATUS_LABELS[setup.status]}</p>
+        <p className="text-[10px] font-bold uppercase tracking-wider text-blue-400">{STATUS_LABELS[setup.status]}</p>
         {revoked && (
           <p className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-red-300">
             <ShieldOff className="h-3 w-3" />
@@ -193,33 +193,33 @@ export function ProjectSetupPanel({
       {canEdit && (
         <div className="mt-4 flex flex-wrap gap-2">
           {(setup.status === "draft" || setup.status === "in_progress") && (
-            <button type="button" onClick={() => setConfirmKind("reissue")} disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm font-semibold text-slate-200 transition hover:border-sky-300/40 hover:bg-sky-300/10 disabled:opacity-50"><RefreshCw className="h-4 w-4" />Reissue Link</button>
+            <button type="button" onClick={() => setConfirmKind("reissue")} disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-[6px] border border-white/10 px-4 text-sm font-semibold text-slate-200 transition hover:border-blue-400/40 hover:bg-blue-400/10 disabled:opacity-50"><RefreshCw className="h-4 w-4" />Reissue Link</button>
           )}
           {(setup.status === "draft" || setup.status === "in_progress") && !revoked && (
-            <button type="button" onClick={() => setConfirmKind("revoke")} disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm font-semibold text-slate-300 transition hover:border-red-300/30 hover:text-red-200 disabled:opacity-50"><ShieldOff className="h-4 w-4" />Revoke Access</button>
+            <button type="button" onClick={() => setConfirmKind("revoke")} disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-[6px] border border-white/10 px-4 text-sm font-semibold text-slate-300 transition hover:border-red-300/30 hover:text-red-200 disabled:opacity-50"><ShieldOff className="h-4 w-4" />Revoke Access</button>
           )}
 
           {setup.status === "submitted" && (
             <>
-              <button type="button" onClick={() => setConfirmKind("confirm")} disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-sky-300 bg-sky-300 px-4 text-sm font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-sky-200 disabled:opacity-60"><Check className="h-4 w-4" />Confirm Setup</button>
-              <button type="button" onClick={() => setConfirmKind("reopen")} disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm font-semibold text-slate-200 transition hover:border-sky-300/40 hover:bg-sky-300/10 disabled:opacity-50">Reopen Setup</button>
-              <button type="button" onClick={() => setConfirmKind("reissue")} disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm font-semibold text-slate-200 transition hover:border-sky-300/40 hover:bg-sky-300/10 disabled:opacity-50"><RefreshCw className="h-4 w-4" />Reissue Link</button>
-              {!revoked && <button type="button" onClick={() => setConfirmKind("revoke")} disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm font-semibold text-slate-300 transition hover:border-red-300/30 hover:text-red-200 disabled:opacity-50"><ShieldOff className="h-4 w-4" />Revoke Access</button>}
+              <button type="button" onClick={() => setConfirmKind("confirm")} disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-[6px] border border-blue-400 bg-blue-400 px-4 text-sm font-semibold text-[#04101f] transition hover:-translate-y-0.5 hover:bg-blue-300 disabled:opacity-60"><Check className="h-4 w-4" />Confirm Setup</button>
+              <button type="button" onClick={() => setConfirmKind("reopen")} disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-[6px] border border-white/10 px-4 text-sm font-semibold text-slate-200 transition hover:border-blue-400/40 hover:bg-blue-400/10 disabled:opacity-50">Reopen Setup</button>
+              <button type="button" onClick={() => setConfirmKind("reissue")} disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-[6px] border border-white/10 px-4 text-sm font-semibold text-slate-200 transition hover:border-blue-400/40 hover:bg-blue-400/10 disabled:opacity-50"><RefreshCw className="h-4 w-4" />Reissue Link</button>
+              {!revoked && <button type="button" onClick={() => setConfirmKind("revoke")} disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-[6px] border border-white/10 px-4 text-sm font-semibold text-slate-300 transition hover:border-red-300/30 hover:text-red-200 disabled:opacity-50"><ShieldOff className="h-4 w-4" />Revoke Access</button>}
             </>
           )}
 
           {setup.status === "confirmed" && (
             <>
-              <button type="button" onClick={() => setConfirmKind("reopen")} disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm font-semibold text-slate-200 transition hover:border-sky-300/40 hover:bg-sky-300/10 disabled:opacity-50">Reopen Setup</button>
-              <button type="button" onClick={() => setConfirmKind("reissue")} disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm font-semibold text-slate-200 transition hover:border-sky-300/40 hover:bg-sky-300/10 disabled:opacity-50"><RefreshCw className="h-4 w-4" />Reissue Link</button>
-              {!revoked && <button type="button" onClick={() => setConfirmKind("revoke")} disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 px-4 text-sm font-semibold text-slate-300 transition hover:border-red-300/30 hover:text-red-200 disabled:opacity-50"><ShieldOff className="h-4 w-4" />Revoke Access</button>}
+              <button type="button" onClick={() => setConfirmKind("reopen")} disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-[6px] border border-white/10 px-4 text-sm font-semibold text-slate-200 transition hover:border-blue-400/40 hover:bg-blue-400/10 disabled:opacity-50">Reopen Setup</button>
+              <button type="button" onClick={() => setConfirmKind("reissue")} disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-[6px] border border-white/10 px-4 text-sm font-semibold text-slate-200 transition hover:border-blue-400/40 hover:bg-blue-400/10 disabled:opacity-50"><RefreshCw className="h-4 w-4" />Reissue Link</button>
+              {!revoked && <button type="button" onClick={() => setConfirmKind("revoke")} disabled={pending} className="inline-flex min-h-11 items-center gap-2 rounded-[6px] border border-white/10 px-4 text-sm font-semibold text-slate-300 transition hover:border-red-300/30 hover:text-red-200 disabled:opacity-50"><ShieldOff className="h-4 w-4" />Revoke Access</button>}
             </>
           )}
         </div>
       )}
 
       {revealedToken && <RevealedLinkCallout rawToken={revealedToken} copied={copied} onCopy={copyLink} onDismiss={() => setRevealedToken(null)} />}
-      {error && <p role="alert" className="mt-4 rounded-lg border border-red-400/20 bg-red-400/[0.06] p-2 text-[11px] text-red-200">{error}</p>}
+      {error && <p role="alert" className="mt-4 rounded-[6px] border border-red-400/20 bg-red-400/[0.06] p-2 text-[11px] text-red-200">{error}</p>}
 
       <div className="mt-5 border-t border-white/6 pt-4">
         <LifecycleRow label="Created" value={formatTimestamp(setup.createdAt)} />
@@ -267,12 +267,12 @@ function RevealedLinkCallout({
 }) {
   const url = typeof window !== "undefined" ? `${window.location.origin}/portal/${rawToken}` : `/portal/${rawToken}`;
   return (
-    <div className="mt-4 rounded-xl border border-emerald-300/20 bg-emerald-300/[0.06] p-4">
+    <div className="mt-4 rounded-[6px] border border-emerald-300/20 bg-emerald-300/[0.06] p-4">
       <p className="text-sm font-semibold text-emerald-100">Private client portal link — shown once</p>
       <p className="mt-1 text-xs text-emerald-100/70">Copy this into your normal client email. It opens this Project&apos;s files and feedback area. If it&apos;s lost, reissue a new one, which invalidates the old link.</p>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
-        <code className="flex-1 overflow-x-auto whitespace-nowrap rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-slate-200">{url}</code>
-        <button type="button" onClick={() => onCopy(rawToken)} className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-emerald-300/40 bg-emerald-300/10 px-3 text-xs font-semibold text-emerald-100 hover:bg-emerald-300/20">
+        <code className="flex-1 overflow-x-auto whitespace-nowrap rounded-[6px] border border-white/10 bg-black/30 px-3 py-2 text-xs text-slate-200">{url}</code>
+        <button type="button" onClick={() => onCopy(rawToken)} className="inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-[6px] border border-emerald-300/40 bg-emerald-300/10 px-3 text-xs font-semibold text-emerald-100 hover:bg-emerald-300/20">
           {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
           {copied ? "Copied" : "Copy Link"}
         </button>
@@ -296,17 +296,17 @@ function ConfirmDialog({
   const copy = CONFIRM_COPY[kind];
   return (
     <div className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-black/75 p-4 backdrop-blur-sm" role="presentation">
-      <section role="dialog" aria-modal="true" className="my-8 w-full max-w-md rounded-2xl border border-white/10 bg-[#0a0f16] shadow-2xl">
+      <section role="dialog" aria-modal="true" className="my-8 w-full max-w-md rounded-[6px] border border-white/10 bg-[#0a0f16] shadow-2xl">
         <header className="flex items-start justify-between border-b border-white/8 p-6">
-          <h2 className="font-sans text-xl font-semibold">{copy.title}</h2>
-          <button type="button" onClick={onCancel} disabled={pending} aria-label="Close" className="rounded-lg border border-white/10 p-2 text-slate-400 hover:text-white"><X className="h-4 w-4" /></button>
+          <h2 className="font-serif text-xl font-normal">{copy.title}</h2>
+          <button type="button" onClick={onCancel} disabled={pending} aria-label="Close" className="rounded-[6px] border border-white/10 p-2 text-slate-400 hover:text-white"><X className="h-4 w-4" /></button>
         </header>
         <div className="p-6">
           <p className="text-sm leading-6 text-slate-400">{copy.body}</p>
         </div>
         <footer className="flex justify-end gap-3 border-t border-white/8 p-6">
-          <button type="button" disabled={pending} onClick={onCancel} className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-slate-300">Cancel</button>
-          <button type="button" disabled={pending} onClick={onConfirm} className="inline-flex min-w-32 items-center justify-center gap-2 rounded-xl bg-sky-300 px-4 py-2.5 text-sm font-semibold text-slate-950 disabled:opacity-60">
+          <button type="button" disabled={pending} onClick={onCancel} className="rounded-[6px] border border-white/10 px-4 py-2.5 text-sm font-semibold text-slate-300">Cancel</button>
+          <button type="button" disabled={pending} onClick={onConfirm} className="inline-flex min-w-32 items-center justify-center gap-2 rounded-[6px] bg-blue-400 px-4 py-2.5 text-sm font-semibold text-[#04101f] disabled:opacity-60">
             {pending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
             {copy.confirmLabel}
           </button>

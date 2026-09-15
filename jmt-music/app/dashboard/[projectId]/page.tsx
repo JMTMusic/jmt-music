@@ -31,7 +31,15 @@ export default async function ClientPortalProjectPage({ params }: { params: Prom
     <header className="py-7"><p className={workspaceEyebrow}>{client?.artistName || "Client not linked"} · Client project</p><h1 className="mt-2 font-serif text-[clamp(27px,4vw,40px)] font-normal">{project.title}</h1><div className="mt-2 flex flex-wrap gap-4 text-xs text-[#7c8794]"><span>{project.phase.replace("_", " ")}</span>{project.targetDate && <span className="flex items-center gap-1.5"><CalendarClock className="h-4 w-4" />{project.targetDate}</span>}</div></header>
 
     <section><p className={workspaceEyebrow}>Private client access</p><div className={`${workspacePanel} mt-3 p-5`}><ProjectSetupPanel propertyId={site.id} projectId={project.id} hasClient={Boolean(project.clientId)} canEdit={access.canCreate} setup={setup} schemaUnavailable={setupSchemaUnavailable} /></div></section>
-    <section className="mt-10"><h2 className="text-xl font-semibold">Project progress</h2><p className="mt-1 text-sm text-slate-500">Control the Production, Mixing, Mastering, and Delivery sections clients see.</p><div className="mt-4 rounded-2xl border border-white/10 bg-white/[.025] p-5"><PortalStagePanel propertyId={site.id} projectId={project.id} stages={stagesResult.stages} canEdit={access.canCreate} schemaUnavailable={stagesResult.status === "error"} /></div></section>
-    <section className="mt-10"><h2 className="text-xl font-semibold">Files and deliveries</h2><p className="mt-1 text-sm text-slate-500">Add Google Drive files and version notes to the client portal.</p><div className="mt-4 rounded-2xl border border-white/10 bg-white/[.025] p-5"><PortalFilePanel propertyId={site.id} projectId={project.id} files={filesResult.files} canEdit={access.canCreate} schemaUnavailable={filesResult.status === "error"} /></div></section>
+    <section className="mt-10">
+      <div className="mb-1 flex items-baseline gap-2.5"><span className={workspaceEyebrow}>Project progress</span><span className="h-px flex-1 bg-white/15" /></div>
+      <p className="text-sm text-slate-500">Control the Production, Mixing, Mastering, and Delivery sections clients see.</p>
+      <div className="mt-4"><PortalStagePanel propertyId={site.id} projectId={project.id} stages={stagesResult.stages} canEdit={access.canCreate} schemaUnavailable={stagesResult.status === "error"} /></div>
+    </section>
+    <section className="mt-10">
+      <div className="mb-1 flex items-baseline gap-2.5"><span className={workspaceEyebrow}>Files and deliveries</span><span className="h-px flex-1 bg-white/15" /></div>
+      <p className="text-sm text-slate-500">Add Google Drive files and version notes to the client portal.</p>
+      <div className="mt-4"><PortalFilePanel propertyId={site.id} projectId={project.id} files={filesResult.files} canEdit={access.canCreate} schemaUnavailable={filesResult.status === "error"} /></div>
+    </section>
   </div></WorkspaceShell>;
 }
