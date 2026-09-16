@@ -31,18 +31,42 @@ export function ClientMixRoom({ view, accessToken, clientName, readOnly = false 
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [activePinId, setActivePinId] = useState<string | null>(null);
   const bars = useMemo(() => Array.from({ length: 112 }, (_, index) => 18 + ((index * 29 + index * index * 7) % 70)), []);
-  useEffect(() => { setPlaying(false); setCurrentTime(0); setDuration(0); }, [selectedId]);
+  useEffect(() => { setPlaying(false); setCurrentTime(0); setDuration(0); setActivePinId(null); }, [selectedId]);
+
+  // The browser's own `timeupdate` event fires just a few times a second — driving the
+  // waveform fill from it looks stepped. Reading currentTime once per animation frame while
+  // playing is what makes the fill and playhead move smoothly instead of jumping.
+  useEffect(() => {
+    if (!playing) return;
+    let frame: number;
+    const tick = () => {
+      if (audio.current) setCurrentTime(audio.current.currentTime);
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [playing]);
+
+  const pinnedComments = useMemo(() => (selected?.comments || []).filter((comment) => comment.timestampSeconds !== null), [selected]);
 
   function togglePlayback() {
     if (!audio.current) return;
     if (audio.current.paused) void audio.current.play(); else audio.current.pause();
   }
+  function seekTo(next: number) {
+    if (!audio.current) return;
+    const clamped = Math.max(0, Math.min(duration || next, next));
+    audio.current.currentTime = clamped;
+    setCurrentTime(clamped);
+  }
 
   function scrub(event: React.MouseEvent<HTMLDivElement>) {
-    if (!audio.current || !duration) return;
+    if (!duration) return;
     const rect = event.currentTarget.getBoundingClientRect();
-    audio.current.currentTime = Math.max(0, Math.min(duration, ((event.clientX - rect.left) / rect.width) * duration));
+    setActivePinId(null);
+    seekTo(((event.clientX - rect.left) / rect.width) * duration);
   }
 
   return <div className="pb-12">
@@ -64,9 +88,25 @@ export function ClientMixRoom({ view, accessToken, clientName, readOnly = false 
               {selected.approval && <span className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${selected.approval.status === "approved" ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300" : "border-amber-300/30 bg-amber-300/10 text-amber-200"}`}>{selected.approval.status.replace("_", " ")}</span>}
             </div>
             {selected.previewAudioUrl ? <>
-              <audio key={selected.id} ref={audio} src={selected.previewAudioUrl} preload="metadata" onLoadedMetadata={(event) => setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)} onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)} />
+              <audio key={selected.id} ref={audio} src={selected.previewAudioUrl} preload="metadata" onLoadedMetadata={(event) => setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)} />
               <div className="relative pt-[22px]">
+                {pinnedComments.length > 0 && <div className="pointer-events-none absolute inset-x-0 top-0 h-[22px]">{pinnedComments.map((comment) => <div key={comment.id} className="pointer-events-auto absolute bottom-0 -translate-x-1/2" style={{ left: `${duration ? (comment.timestampSeconds! / duration) * 100 : 0}%` }}>
+                  <button type="button" onClick={(event) => { event.stopPropagation(); seekTo(comment.timestampSeconds!); setActivePinId((current) => (current === comment.id ? null : comment.id)); }}
+                    className={`whitespace-nowrap rounded-[3px] border bg-[#101722] px-1 font-mono text-[10px] leading-4 ${activePinId === comment.id ? "border-blue-400 text-blue-200" : comment.authorType === "staff" ? "border-blue-400/40 text-blue-300 hover:border-blue-400" : "border-emerald-400/40 text-emerald-300 hover:border-emerald-400"}`}>
+                    {time(comment.timestampSeconds)}
+                  </button>
+                  <span className={`mx-auto block h-1.5 w-px ${activePinId === comment.id ? "bg-blue-400" : "bg-white/25"}`} />
+                </div>)}</div>}
                 <div onClick={scrub} className="flex h-24 cursor-pointer items-center gap-[2px]" aria-label="Audio waveform — click to scrub">{bars.map((height, index) => { const played = duration ? index / bars.length <= currentTime / duration : false; return <span key={index} className={`min-w-0 flex-1 rounded-full ${played ? "bg-blue-400" : "bg-[#334052]"}`} style={{ height: `${height}%` }} />; })}<span className="absolute bottom-0 top-[22px] w-px bg-blue-200" style={{ left: `${duration ? (currentTime / duration) * 100 : 0}%` }} /></div>
+                {activePinId && (() => {
+                  const comment = pinnedComments.find((item) => item.id === activePinId);
+                  if (!comment) return null;
+                  const pct = duration ? (comment.timestampSeconds! / duration) * 100 : 0;
+                  return <div className="absolute top-[26px] z-10 w-max max-w-[260px] -translate-x-1/2 rounded-[6px] border border-white/20 bg-[#1a2230] p-2.5 shadow-lg" style={{ left: `${Math.min(Math.max(pct, 14), 86)}%` }}>
+                    <div className="flex items-center gap-2 text-[11px]"><strong className="text-slate-200">{comment.authorName}</strong><span className="font-mono text-blue-300">{time(comment.timestampSeconds)}</span></div>
+                    <p className="mt-1 text-xs leading-5 text-slate-400">{comment.body}</p>
+                  </div>;
+                })()}
               </div>
             </> : <div className="grid h-24 place-items-center text-center"><div><FileAudio className="mx-auto mb-2 h-6 w-6 text-blue-300" /><p className="text-xs text-slate-400">The mix isn&apos;t uploaded for playback yet.</p></div></div>}
             <div className="mt-3 flex flex-wrap items-center gap-[14px]">
