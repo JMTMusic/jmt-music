@@ -179,6 +179,15 @@ export async function addStaffPortalComment(projectId: string, input: { songId: 
   return error ? { status: "error" as const, message: "Your note could not be saved." } : { status: "success" as const };
 }
 
+/** Staff-only moderation: remove any note in the thread (theirs or the client's) — e.g. to clean up test data or a note that no longer applies after a re-upload. Caller must already have checked role. */
+export async function deletePortalComment(projectId: string, commentId: string) {
+  const supabase = createSupabaseAdminClient();
+  const { data: comment } = await supabase.from("portal_file_comments").select("id").eq("id", commentId).eq("project_id", projectId).maybeSingle();
+  if (!comment) return { status: "error" as const, message: "That note could not be found." };
+  const { error } = await supabase.from("portal_file_comments").delete().eq("id", commentId);
+  return error ? { status: "error" as const, message: "The note could not be removed." } : { status: "success" as const };
+}
+
 export async function addClientPortalComment(rawToken: unknown, input: { songId: string; body: string; timestampSeconds?: number | null; authorName: string }) {
   const access = await resolveToken(rawToken);
   if (access.status !== "found") return { status: "error" as const, message: "This private link is no longer valid." };

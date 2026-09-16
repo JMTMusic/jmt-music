@@ -1,13 +1,14 @@
 "use client";
 
 import { useActionState, useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
-import { Download, LoaderCircle, MessageSquare, Pause, Pencil, Play, Send, Upload } from "lucide-react";
+import { Download, LoaderCircle, MessageSquare, Pause, Pencil, Play, Send, Upload, X } from "lucide-react";
 import type { PortalFile, PortalFileType, PortalSong } from "@/lib/client-portal/types";
 import type { SiteId } from "@/lib/control-center/types";
 import {
   addPortalFileAction,
   addPortalSongAction,
   addStaffPortalCommentAction,
+  deletePortalCommentAction,
   preparePortalAudioUpload,
   savePortalAudioPathAction,
   updatePortalSongAction,
@@ -38,6 +39,7 @@ export function AdminMixRoom({ propertyId, projectId, songs, files, canEdit }: {
   const songFiles = useMemo(() => files.filter((file) => file.songId === selected?.id), [files, selected]);
   const comments = useMemo(() => songs.flatMap((song) => song.comments.map((comment) => ({ ...comment, song }))).sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)), [songs]);
   const commentAction = addStaffPortalCommentAction.bind(null, projectId);
+  const deleteCommentAction = deletePortalCommentAction.bind(null, projectId);
 
   const audio = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
@@ -178,7 +180,7 @@ export function AdminMixRoom({ propertyId, projectId, songs, files, canEdit }: {
                 if (!comment) return null;
                 const pct = duration ? (comment.timestampSeconds! / duration) * 100 : 0;
                 return <div className="absolute top-[26px] z-10 w-max max-w-[260px] -translate-x-1/2 rounded-[6px] border border-white/20 bg-[#1a2230] p-2.5 shadow-lg" style={{ left: `${Math.min(Math.max(pct, 14), 86)}%` }}>
-                  <div className="flex items-center gap-2 text-[11px]"><strong className="text-slate-200">{comment.authorName}</strong><span className="font-mono text-blue-300">{time(comment.timestampSeconds)}</span></div>
+                  <div className="flex items-center gap-2 text-[11px]"><strong className="text-slate-200">{comment.authorName}</strong><span className="font-mono text-blue-300">{time(comment.timestampSeconds)}</span><form action={deleteCommentAction} className="ml-auto"><input type="hidden" name="commentId" value={comment.id} /><button type="submit" aria-label="Remove note" className="text-slate-500 hover:text-red-300"><X className="h-3 w-3" /></button></form></div>
                   <p className="mt-1 text-xs leading-5 text-slate-400">{comment.body}</p>
                 </div>;
               })()}
@@ -208,7 +210,7 @@ export function AdminMixRoom({ propertyId, projectId, songs, files, canEdit }: {
 
       <aside className={`${workspacePanel} self-start overflow-hidden xl:sticky xl:top-20`}>
         {panelTitle("Activity")}
-        <div className="max-h-[590px] overflow-y-auto p-4">{comments.length ? <div className="space-y-5">{comments.map((item) => <div key={item.id} className="flex gap-3"><span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-[9px] font-bold ${item.authorType === "staff" ? "bg-blue-400/20 text-blue-200" : "bg-emerald-400/15 text-emerald-300"}`}>{item.authorName.slice(0, 2).toUpperCase()}</span><div className="min-w-0"><div className="text-[11px]"><strong className="text-slate-200">{item.authorName}</strong><span className="ml-2 text-slate-600">{date(item.createdAt)}</span></div><p className="mt-1 text-xs leading-5 text-slate-400">{item.body}</p><button onClick={() => setSelectedId(item.song.id)} className="mt-1 text-[10px] text-blue-300">{item.song.title}{item.timestampSeconds !== null ? ` · ${time(item.timestampSeconds)}` : ""}</button></div></div>)}</div> : <div className="py-10 text-center"><MessageSquare className="mx-auto mb-3 h-5 w-5 text-slate-600" /><p className="text-xs text-slate-500">Client notes and your replies show up here.</p></div>}</div>
+        <div className="max-h-[590px] overflow-y-auto p-4">{comments.length ? <div className="space-y-5">{comments.map((item) => <div key={item.id} className="group flex gap-3"><span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-[9px] font-bold ${item.authorType === "staff" ? "bg-blue-400/20 text-blue-200" : "bg-emerald-400/15 text-emerald-300"}`}>{item.authorName.slice(0, 2).toUpperCase()}</span><div className="min-w-0 flex-1"><div className="flex items-start gap-2 text-[11px]"><strong className="text-slate-200">{item.authorName}</strong><span className="text-slate-600">{date(item.createdAt)}</span><form action={deleteCommentAction} className="ml-auto opacity-0 group-hover:opacity-100"><input type="hidden" name="commentId" value={item.id} /><button type="submit" aria-label="Remove note" className="text-slate-600 hover:text-red-300"><X className="h-3 w-3" /></button></form></div><p className="mt-1 text-xs leading-5 text-slate-400">{item.body}</p><button onClick={() => setSelectedId(item.song.id)} className="mt-1 text-[10px] text-blue-300">{item.song.title}{item.timestampSeconds !== null ? ` · ${time(item.timestampSeconds)}` : ""}</button></div></div>)}</div> : <div className="py-10 text-center"><MessageSquare className="mx-auto mb-3 h-5 w-5 text-slate-600" /><p className="text-xs text-slate-500">Client notes and your replies show up here.</p></div>}</div>
         {selected && canEdit && <form action={commentAction} className="flex gap-2 border-t border-white/10 p-3"><input type="hidden" name="songId" value={selected.id} /><input type="hidden" name="authorName" value="Jonathan" /><input name="body" required maxLength={2000} placeholder="Reply to the client…" className="min-w-0 flex-1 rounded-[6px] border border-white/15 bg-[#0b111a] px-3 text-xs text-white" /><button aria-label="Send message" className="grid h-9 w-9 place-items-center rounded-[6px] border border-white/15 text-slate-300 hover:border-blue-400/50"><Send className="h-3.5 w-3.5" /></button></form>}
       </aside>
     </div>

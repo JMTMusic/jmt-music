@@ -5,7 +5,7 @@ import { getControlCenterRole } from "@/lib/control-center/access";
 import { getSiteConfig } from "@/lib/control-center/data";
 import { siteRegistry } from "@/lib/control-center/site-registry";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { addStaffPortalComment } from "@/lib/client-portal/repository";
+import { addStaffPortalComment, deletePortalComment } from "@/lib/client-portal/repository";
 import { ensurePortalAudioBucket, PORTAL_AUDIO_BUCKET, PORTAL_AUDIO_MAX_BYTES, BEAT_AUDIO_MIME_TYPES } from "@/lib/supabase/storage";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f-]{27}$/i;
@@ -156,6 +156,16 @@ export async function addStaffPortalCommentAction(projectId: string, formData: F
     body: String(formData.get("body") || ""),
     timestampSeconds: timestampRaw ? Number(timestampRaw) : null
   });
+  if (result.status === "success") revalidatePath(`/dashboard/${projectId}`);
+}
+
+/** Bound to a projectId, same pattern as addStaffPortalCommentAction — removes a note (theirs or the client's) from the activity thread. */
+export async function deletePortalCommentAction(projectId: string, formData: FormData) {
+  const role = await getControlCenterRole();
+  if (role !== "owner" && role !== "editor") return;
+  const commentId = String(formData.get("commentId") || "");
+  if (!UUID_PATTERN.test(commentId)) return;
+  const result = await deletePortalComment(projectId, commentId);
   if (result.status === "success") revalidatePath(`/dashboard/${projectId}`);
 }
 
