@@ -9,7 +9,10 @@ export const PORTAL_AUDIO_BUCKET = "portal-audio";
 export const WEBSITE_MEDIA_MAX_BYTES = 10 * 1024 * 1024;
 export const BEAT_ARTWORK_MAX_BYTES = 10 * 1024 * 1024;
 export const BEAT_AUDIO_MAX_BYTES = 100 * 1024 * 1024;
-export const PORTAL_AUDIO_MAX_BYTES = 100 * 1024 * 1024;
+// Well under Supabase's free/starter-tier per-file cap (commonly 50MB) — this bucket only
+// ever holds a compressed streaming preview, not the master, so 25MB is generous headroom
+// (a 10-minute song at 320kbps MP3 is roughly 24MB).
+export const PORTAL_AUDIO_MAX_BYTES = 25 * 1024 * 1024;
 export const BEAT_ARTWORK_MIME_TYPES = [
   "image/jpeg",
   "image/png",
@@ -79,7 +82,12 @@ export async function ensurePortalAudioBucket(
     allowedMimeTypes: [...BEAT_AUDIO_MIME_TYPES]
   };
   const current = await supabase.storage.getBucket(PORTAL_AUDIO_BUCKET);
-  if (current.data) return { error: null };
+  if (current.data) {
+    // Keep the bucket's limits in sync — a prior attempt may have left it with a
+    // fileSizeLimit that no longer matches PORTAL_AUDIO_MAX_BYTES.
+    const updated = await supabase.storage.updateBucket(PORTAL_AUDIO_BUCKET, options);
+    return { error: updated.error?.message || null };
+  }
 
   // Don't gate the create attempt on matching a specific "not found" wording — Supabase's
   // exact error text isn't a stable contract, and getting this wrong short-circuits every
