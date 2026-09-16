@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { AdminMixRoom } from "@/components/control-center/admin-mix-room";
 import { PortalStagePanel } from "@/components/control-center/portal-stage-panel";
 import { ProjectSetupPanel } from "@/components/control-center/project-setup-panel";
-import { getPortalFilesForProject, getPortalStagesForProject } from "@/lib/client-portal/repository";
+import { getPortalFilesForProject, getPortalSongsForProject, getPortalStagesForProject } from "@/lib/client-portal/repository";
 import { getControlCenterAccessStatus } from "@/lib/control-center/access";
 import { getPropertyClients } from "@/lib/control-center/client-repository";
 import { getSiteConfig } from "@/lib/control-center/data";
@@ -16,16 +16,16 @@ import { WorkspaceShell, workspaceEyebrow, workspacePanel } from "@/components/c
 export default async function ClientPortalProjectPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
   const site = getSiteConfig("jmt-music");
-  const [projectsResult, clientsResult, access, setupResult, filesResult, stagesResult] = await Promise.all([
+  const [projectsResult, clientsResult, access, setupResult, songsResult, filesResult, stagesResult] = await Promise.all([
     getPropertyProjects(site), getPropertyClients(site), getControlCenterAccessStatus(),
-    getProjectSetupByProjectId(site, projectId), getPortalFilesForProject(projectId), getPortalStagesForProject(projectId)
+    getProjectSetupByProjectId(site, projectId), getPortalSongsForProject(projectId), getPortalFilesForProject(projectId), getPortalStagesForProject(projectId)
   ]);
   const project = projectsResult.projects.find((item) => item.id === projectId);
   if (!project) notFound();
   const client = project.clientId ? clientsResult.clients.find((item) => item.id === project.clientId) : undefined;
   const setup: ProjectSetupRecord | null = setupResult.status === "found" ? setupResult.setup : null;
   const setupSchemaUnavailable = setupResult.status === "error" && setupResult.message.toLowerCase().includes("migration");
-  const songCount = filesResult.files.filter((file) => file.fileType === "audio").length;
+  const songCount = songsResult.songs.length;
 
   return <WorkspaceShell showSignOut><div className="pt-5">
     <nav className="flex items-center gap-2 text-xs text-slate-500"><Link href="/dashboard" className="hover:text-blue-200">Artists</Link>{client && <><span>/</span><span className="text-slate-300">{client.artistName}</span></>}</nav>
@@ -37,7 +37,7 @@ export default async function ClientPortalProjectPage({ params }: { params: Prom
 
     <PortalStagePanel propertyId={site.id} projectId={project.id} stages={stagesResult.stages} canEdit={access.canCreate} schemaUnavailable={stagesResult.status === "error"} />
 
-    <AdminMixRoom propertyId={site.id} projectId={project.id} files={filesResult.files} canEdit={access.canCreate} />
+    <AdminMixRoom propertyId={site.id} projectId={project.id} songs={songsResult.songs} files={filesResult.files} canEdit={access.canCreate} />
 
     <section className="mt-2">
       <div className="mb-1 flex items-baseline gap-2.5"><span className={workspaceEyebrow}>Private client access</span><span className="h-px flex-1 bg-white/15" /></div>

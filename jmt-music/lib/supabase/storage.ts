@@ -80,14 +80,17 @@ export async function ensurePortalAudioBucket(
   };
   const current = await supabase.storage.getBucket(PORTAL_AUDIO_BUCKET);
   if (current.data) return { error: null };
-  if (current.error && !current.error.message.toLowerCase().includes("not found")) {
-    console.error("[portal-audio] Bucket lookup failed:", current.error.message);
-    return { error: current.error.message };
-  }
 
+  // Don't gate the create attempt on matching a specific "not found" wording — Supabase's
+  // exact error text isn't a stable contract, and getting this wrong short-circuits every
+  // upload with a misleading permissions-flavored message before create is ever tried.
   const created = await supabase.storage.createBucket(PORTAL_AUDIO_BUCKET, options);
-  if (created.error) console.error("[portal-audio] Bucket creation failed:", created.error.message);
-  return { error: created.error?.message || null };
+  if (!created.error) return { error: null };
+  // A concurrent request (or a bucket created outside this code path) racing us here is a
+  // success, not a failure — the bucket exists either way.
+  if (created.error.message.toLowerCase().includes("already exists")) return { error: null };
+  console.error("[portal-audio] Bucket creation failed:", created.error.message);
+  return { error: created.error.message };
 }
 
 /** Ensures the public website media bucket exists for authorized CMS uploads. */
