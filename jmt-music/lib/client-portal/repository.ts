@@ -118,6 +118,18 @@ async function resolveToken(rawToken: unknown) {
   return getProjectSetupByRawToken(rawToken);
 }
 
+/** The exact query a client's token resolves to (visible_to_client-filtered songs/files). Shared by the real token path and the staff preview path so "what staff sees in preview" can never drift from "what the client actually sees." */
+async function fetchClientVisibleContent(supabase: ReturnType<typeof createSupabaseAdminClient>, projectId: string) {
+  const [{ data: rawSongs, error: songsError }, { data: rawFiles, error: filesError }] = await Promise.all([
+    supabase.from("portal_songs").select(SONG_COLUMNS).eq("project_id", projectId).eq("visible_to_client", true).order("created_at", { ascending: false }),
+    supabase.from("portal_files").select(FILE_COLUMNS).eq("project_id", projectId).eq("visible_to_client", true).order("created_at", { ascending: false })
+  ]);
+  if (songsError || filesError) return null;
+  const songs = await attachSongFeedback(supabase, rawSongs || []);
+  const files = mapFiles(rawFiles || []);
+  return { songs, files };
+}
+
 export async function getClientPortalByToken(rawToken: unknown): Promise<PortalResult> {
   const access = await resolveToken(rawToken);
   if (access.status === "not_found" || access.status === "revoked") return access;
@@ -125,16 +137,29 @@ export async function getClientPortalByToken(rawToken: unknown): Promise<PortalR
 
   try {
     const supabase = createSupabaseAdminClient();
-    const [{ data: rawSongs, error: songsError }, { data: rawFiles, error: filesError }] = await Promise.all([
-      supabase.from("portal_songs").select(SONG_COLUMNS).eq("project_id", access.view.project.id).eq("visible_to_client", true).order("created_at", { ascending: false }),
-      supabase.from("portal_files").select(FILE_COLUMNS).eq("project_id", access.view.project.id).eq("visible_to_client", true).order("created_at", { ascending: false })
-    ]);
-    if (songsError || filesError) return { status: "error", message: "Client Portal storage is not ready. Apply the latest Supabase migration." };
-
-    const songs = await attachSongFeedback(supabase, rawSongs || []);
-    const files = mapFiles(rawFiles || []);
+    const content = await fetchClientVisibleContent(supabase, access.view.project.id);
+    if (!content) return { status: "error", message: "Client Portal storage is not ready. Apply the latest Supabase migration." };
     const stageResult = await getPortalStagesForProject(access.view.project.id);
-    return { status: "found", view: { project: access.view.project, client: access.view.client, songs, files, stages: stageResult.stages } };
+    return { status: "found", view: { project: access.view.project, client: access.view.client, songs: content.songs, files: content.files, stages: stageResult.stages } };
+  } catch {
+    return { status: "error", message: "The Client Portal is temporarily unavailable." };
+  }
+}
+
+/**
+ * Staff-only "view as client" preview: the same visible_to_client-filtered content a real
+ * token would resolve to, fetched directly by projectId instead — no client token needed,
+ * since the caller is already authenticated as staff (this lives under /dashboard, which
+ * middleware already gates). Never exposes a real client token, so it can't be misused to
+ * reach the live portal without going through the actual issued link.
+ */
+export async function getPortalPreviewForProject(projectId: string, project: ClientPortalView["project"], client: ClientPortalView["client"]): Promise<PortalResult> {
+  try {
+    const supabase = createSupabaseAdminClient();
+    const content = await fetchClientVisibleContent(supabase, projectId);
+    if (!content) return { status: "error", message: "Client Portal storage is not ready. Apply the latest Supabase migration." };
+    const stageResult = await getPortalStagesForProject(projectId);
+    return { status: "found", view: { project, client, songs: content.songs, files: content.files, stages: stageResult.stages } };
   } catch {
     return { status: "error", message: "The Client Portal is temporarily unavailable." };
   }
