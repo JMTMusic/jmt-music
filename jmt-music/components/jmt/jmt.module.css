@@ -118,7 +118,12 @@
   -webkit-background-clip:text; background-clip:text; color:transparent;
   filter:drop-shadow(0 0 46px rgba(37,89,184,.5));
 }
-.signature svg{ position:absolute; top:26%; left:66%; width:min(44vw,calc(100vw - 80px)); max-width:462px; height:140px; overflow:visible; pointer-events:none; }
+.signature svg{
+  --tail-width:min(44vw,calc(100vw - 80px),462px);
+  position:absolute; top:26%;
+  left:min(66%,calc(50vw + 50% - 24px - var(--tail-width)));
+  width:var(--tail-width); height:140px; overflow:visible; pointer-events:none;
+}
 .signature svg path{ stroke-dasharray:600; stroke-dashoffset:600; animation:drawTail 1.6s cubic-bezier(.4,0,.2,1) forwards .5s; }
 @keyframes drawTail{ to{ stroke-dashoffset:0; } }
 
@@ -148,7 +153,12 @@
   .signature svg path{ stroke-dashoffset:0; animation:none; }
   .chev{ animation:none; }
 }
-@media (max-width:640px){ .signature svg{ left:60%; width:min(44vw,calc(100vw - 40px)); } }
+@media (max-width:640px){
+  .signature svg{
+    --tail-width:min(44vw,calc(100vw - 40px));
+    left:min(60%,calc(50vw + 50% - 12px - var(--tail-width)));
+  }
+}
 
 /* ---------------- hero -> philosophy transition ---------------- */
 .transitionFade{
