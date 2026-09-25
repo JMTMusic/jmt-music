@@ -40,7 +40,7 @@ export function SiteShell({ children, footerCms, extraGlobalSections = [] }) {
     };
   }, [open]);
 
-  if (pathname.startsWith("/control-center") || pathname.startsWith("/dashboard") || pathname.startsWith("/studio") || pathname.startsWith("/start-your-project") || pathname.startsWith("/project-setup") || pathname.startsWith("/portal") || pathname.startsWith("/login")) {
+  if (pathname === "/" || pathname.startsWith("/sound") || pathname.startsWith("/inquiries") || pathname.startsWith("/control-center") || pathname.startsWith("/dashboard") || pathname.startsWith("/studio") || pathname.startsWith("/start-your-project") || pathname.startsWith("/project-setup") || pathname.startsWith("/portal") || pathname.startsWith("/login")) {
     return children;
   }
 

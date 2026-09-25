@@ -7,14 +7,14 @@ import { getPublishedPageSections, getPublishedSection } from "@/lib/public-cms"
 export const metadata = {
   metadataBase: new URL("https://jmtmusic.studio"),
   title: {
-    default: "JMT Music | Music Production, Mixing & Mastering",
-    template: "%s | JMT Music"
+    default: "JMT Music — Sound With Identity",
+    template: "%s"
   },
-  description: "Thoughtful music production, beat licensing, mixing, session keys, and sync music created with craftsmanship and genuine care.",
+  description: "Music production built around the artist. Sound with identity.",
   openGraph: {
-    title: "JMT Music",
-    description: "Thoughtful music production, beat licensing, mixing, session keys, and sync music created with craftsmanship and genuine care.",
-    images: ["/assets/jmt-studio-hero.png"]
+    siteName: "JMT Music",
+    title: "JMT Music — Sound With Identity",
+    description: "Music production built around the artist. Sound with identity."
   }
 };
 
