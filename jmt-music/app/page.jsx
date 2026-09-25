@@ -39,7 +39,7 @@ export default function Home() {
         <div className={styles.heroInner}>
           <div className={styles.signature}>
             <h1>Jmt</h1>
-            <svg viewBox="0 0 400 140" aria-hidden="true">
+            <svg viewBox="0 0 440 140" aria-hidden="true">
               <defs>
                 <linearGradient id="tailGrad" x1="0%" y1="100%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#f4f8ff" stopOpacity="0.95" />
