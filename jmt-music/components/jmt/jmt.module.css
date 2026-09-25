@@ -112,16 +112,11 @@
 
 .signature{ position:relative; display:inline-block; opacity:0; animation:rise 1s ease forwards .15s; }
 .signature h1{
-  position:relative; margin:0; font-family:var(--font-script); font-weight:400; font-style:normal; white-space:nowrap;
+  margin:0; font-family:var(--font-script); font-weight:400; font-style:normal; white-space:nowrap;
   font-size:clamp(96px,17vw,220px); line-height:1.15; padding-bottom:0.1em;
   background:linear-gradient(115deg, #cfe0ff 0%, #eef4ff 14%, #8fb3ec 30%, #ffffff 42%, #4d7fd1 56%, #16335F 70%, #a9c6f5 84%, #2559B8 100%);
   -webkit-background-clip:text; background-clip:text; color:transparent;
   filter:drop-shadow(0 0 46px rgba(37,89,184,.5));
-}
-.signature h1::after{
-  content:""; position:absolute; top:.39em; right:0; width:.16em; height:.16em;
-  background:linear-gradient(135deg,#4d7fd1 0%,#2559B8 100%);
-  clip-path:polygon(0 0,100% 0,35% 100%); pointer-events:none;
 }
 .signature svg{
   --tail-width:min(44vw,calc(100vw - 80px),462px);
