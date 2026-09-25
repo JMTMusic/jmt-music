@@ -39,7 +39,7 @@ export default function Home() {
         <div className={styles.heroInner}>
           <div className={styles.signature}>
             <h1>Jmt</h1>
-            <svg viewBox="0 0 440 140" aria-hidden="true">
+            <svg viewBox="0 0 400 140" aria-hidden="true">
               <defs>
                 <linearGradient id="tailGrad" x1="0%" y1="100%" x2="100%" y2="0%">
                   <stop offset="0%" stopColor="#f4f8ff" stopOpacity="0.95" />
@@ -48,7 +48,7 @@ export default function Home() {
                   <stop offset="100%" stopColor="#2559B8" stopOpacity="0" />
                 </linearGradient>
               </defs>
-              <path d="M0,94 C70,80 140,60 220,48 C280,38 360,25 430,13" fill="none" stroke="url(#tailGrad)" strokeWidth="3" strokeLinecap="round" />
+              <path d="M0,94 C70,80 140,60 220,48 C280,38 340,28 398,18" fill="none" stroke="url(#tailGrad)" strokeWidth="3" strokeLinecap="round" />
             </svg>
           </div>
           <p className={styles.tag}>Sound with identity.</p>
