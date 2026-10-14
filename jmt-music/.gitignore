@@ -6,3 +6,7 @@ npm-debug.log*
 tsconfig.tsbuildinfo
 build*.log
 install*.log
+.vercel
+.env*
+supabase/.temp
+.claude/
