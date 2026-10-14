@@ -15,7 +15,7 @@ export const metadata = {
   }
 };
 
-const TEASER_SLUGS = ["heat-check", "dreaming", "why-not"];
+const TEASER_SLUGS = ["heat-check", "dreaming", "days-gone-by"];
 
 function buildTeaserTracks() {
   return TEASER_SLUGS.map((slug, i) => {

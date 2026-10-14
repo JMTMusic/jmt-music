@@ -1,5 +1,6 @@
 {
   "tracks": [
+    {"title":"Days Gone By","slug":"days-gone-by","genre":"","mood":"","bpm":null,"key":null,"coverImage":"/assets/covers/hoodie.jpg","audioUrl":"/audio/days-gone-by.mp3","shortDescription":"","description":"","productionRole":"","productionNotes":"","beatstarsUrl":null,"releaseDate":"2026-10-14","featured":true,"tags":[]},
     {"title":"Bang","slug":"bang","genre":"","mood":"","bpm":null,"key":null,"coverImage":"/assets/covers/cloud-nine.png","audioUrl":"/audio/bang.mp3","shortDescription":"","description":"","productionRole":"","productionNotes":"","beatstarsUrl":null,"releaseDate":"2026-09-25","featured":true,"tags":[]},
     {"title":"Boss","slug":"boss","genre":"","mood":"","bpm":null,"key":null,"coverImage":"/assets/covers/swagger.jpg","audioUrl":"/audio/boss.mp3","shortDescription":"","description":"","productionRole":"","productionNotes":"","beatstarsUrl":null,"releaseDate":"2026-09-25","featured":true,"tags":[]},
     {"title":"Heat Check","slug":"heat-check","genre":"","mood":"","bpm":null,"key":null,"coverImage":"/assets/covers/heat-check.jpg","audioUrl":"/audio/heat-check.mp3","shortDescription":"","description":"","productionRole":"","productionNotes":"","beatstarsUrl":null,"releaseDate":"2026-09-25","featured":true,"tags":[]},
